@@ -9,6 +9,8 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.PixelFormat;
 
+import JuanCraft.MainGameLoop;
+
 /**
  * DisplayManager is responsible for managing the display window for the game.
  * It handles the creation, updating, and closing of the display using LWJGL (Lightweight Java Game Library).
@@ -18,7 +20,7 @@ public class DisplayManager {
     // The width of the display window.
     private static final int WIDTH = 1920;
     // The height of the display window.
-    private static final int HEIGTH = 1080;
+    private static final int HEIGHT = 1080;
     // The frame rate cap (frames per second).
     private static final int FPS_CAP = 120;
     
@@ -37,7 +39,7 @@ public class DisplayManager {
         
         try {
             // Set the display mode with the defined width and height.
-            Display.setDisplayMode(new DisplayMode(WIDTH, HEIGTH));
+            Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
             // Create the display with the specified pixel format and context attributes.
             Display.create(new PixelFormat(), attribs);
             // Set the title of the window.
@@ -69,11 +71,11 @@ public class DisplayManager {
         // Process keyboard input events.
         while(Keyboard.next()) {
             if(Keyboard.getEventKeyState()) {
-            	
-            	// If 'ESCAPE' is pressed, the program is closed.
-            	if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-            		closeDisplay();
-            	}
+                
+                // If 'ESCAPE' is pressed, the program is closed.
+                if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
+                    closeDisplay();
+                }
                 // If 'E' is pressed, toggle mouse grabbing (capture or release the mouse).
                 if(Keyboard.isKeyDown(Keyboard.KEY_E) && Mouse.isGrabbed()) {
                     Mouse.setGrabbed(false);
@@ -89,6 +91,9 @@ public class DisplayManager {
      * Releases all resources associated with the display and ensures a proper shutdown.
      */
     public static void closeDisplay() {
+        
+        // Clean up any resources used by the Loader before closing the display.
+        MainGameLoop.loader1.cleanUp();
         
         // Destroy the display and release any allocated resources.
         Display.destroy();

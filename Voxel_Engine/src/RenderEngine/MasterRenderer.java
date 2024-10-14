@@ -1,11 +1,12 @@
 package RenderEngine;
 
 import org.lwjgl.opengl.GL11;
+import Models.RawModel;
 
 /**
  * MasterRenderer is responsible for handling the rendering setup and preparation
  * for the game scene. It sets up the background color and clears the screen before
- * rendering new frames.
+ * rendering new frames. Additionally, it handles the rendering of 3D entities.
  */
 public class MasterRenderer {
 
@@ -26,5 +27,16 @@ public class MasterRenderer {
         
         // Clear the color buffer to apply the new clear color, preparing the screen for drawing.
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+    }
+    
+    /**
+     * Renders the specified RawModel by delegating the rendering process to the EntityRenderer.
+     * This method binds the VAO of the model and calls the render method to draw the model.
+     * 
+     * @param model The RawModel to be rendered, which contains the VAO ID and vertex count.
+     */
+    public void render(RawModel model) {
+        // Delegate the rendering of the model to the EntityRenderer class.
+        EntityRenderer.render(model);
     }
 }
