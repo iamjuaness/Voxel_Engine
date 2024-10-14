@@ -144,6 +144,7 @@ If you would like to contribute to this project, please follow these steps:
 5. Open a Pull Request.
 
 ## 📃 License
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/iamjuaness/Voxel_Engine/blob/master/LICENSE) file for details.
 
 ## 👏🏻 Acknowledgments
 - Special thanks to the LWJGL community for their resources and support.
