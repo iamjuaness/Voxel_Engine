@@ -16,9 +16,9 @@ import org.lwjgl.opengl.PixelFormat;
 public class DisplayManager {
     
     // The width of the display window.
-    private static final int WIDTH = 120;
+    private static final int WIDTH = 1920;
     // The height of the display window.
-    private static final int HEIGTH = 720;
+    private static final int HEIGTH = 1080;
     // The frame rate cap (frames per second).
     private static final int FPS_CAP = 120;
     
@@ -69,6 +69,11 @@ public class DisplayManager {
         // Process keyboard input events.
         while(Keyboard.next()) {
             if(Keyboard.getEventKeyState()) {
+            	
+            	// If 'ESCAPE' is pressed, the program is closed.
+            	if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
+            		closeDisplay();
+            	}
                 // If 'E' is pressed, toggle mouse grabbing (capture or release the mouse).
                 if(Keyboard.isKeyDown(Keyboard.KEY_E) && Mouse.isGrabbed()) {
                     Mouse.setGrabbed(false);
