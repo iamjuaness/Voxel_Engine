@@ -1,5 +1,13 @@
 # Voxel Engine - JuanCraft
 
+ <p align="left">
+   <img src="https://img.shields.io/badge/STATUS-EN%20DESAROLLO-green">
+ </p>
+
+ <h1 align="left">
+  🚧 Proyecto en construcción 🚧</h1>
+   <p></p>
+
 JuanCraft is a 3D game built using the Lightweight Java Game Library (LWJGL). The project demonstrates the use of OpenGL for rendering graphics and provides a basic structure for developing a game.
 
 ## Table of Contents
