@@ -37,16 +37,20 @@ public class MainGameLoop {
         
         // Define vertices for a simple square model.
         float[] vertices = {
-        	-0.5f, 0.5f, 0,   // Top left
-        	-0.5f, -0.5f, 0,  // Bottom left
-        	0.5f, -0.5f, 0,   // Bottom right
-        	0.5f, -0.5f, 0,   // Bottom right
-        	0.5f, 0.5f, 0,    // Top right
-        	-0.5f, 0.5f, 0    // Top left
+        	-0.5f, 0.5f, 0,   // Top left corner of the square
+        	-0.5f, -0.5f, 0,  // Bottom left corner of the square
+        	0.5f, -0.5f, 0,   // Bottom right corner of the square
+        	0.5f, 0.5f, 0,    // Top right corner of the square
+        };
+        
+        // Define indices for the square's two triangles.
+        int[] indices = {
+        	0, 1, 2,  // First triangle (top left, bottom left, bottom right)
+        	2, 3, 0   // Second triangle (bottom right, top right, top left)
         };
         
         // Load the vertices into a RawModel.
-        RawModel model = loader.loadToVao(vertices);
+        RawModel model = loader.loadToVao(vertices, indices);
         
         // Main game loop, runs until the display is requested to close.
         while(!Display.isCloseRequested()) {
