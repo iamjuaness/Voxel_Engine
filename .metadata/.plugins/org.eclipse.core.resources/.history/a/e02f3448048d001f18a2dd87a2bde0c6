@@ -1,0 +1,11 @@
+package Textures;
+
+public class Modeltexture {
+	
+	int textureID;
+	
+	public Modeltexture(int textureID) {
+		this.textureID = textureID;
+	}
+
+}

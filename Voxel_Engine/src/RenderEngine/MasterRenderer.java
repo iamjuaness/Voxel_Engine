@@ -1,7 +1,7 @@
 package RenderEngine;
 
 import org.lwjgl.opengl.GL11;
-import Models.RawModel;
+import Models.TexturedModel;
 
 /**
  * MasterRenderer is responsible for handling the rendering setup and
@@ -32,16 +32,17 @@ public class MasterRenderer {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 	}
 
-	/**
-	 * Renders the specified RawModel by delegating the rendering process to the
-	 * EntityRenderer. This method binds the VAO of the model and calls the render
-	 * method to draw the model.
-	 * 
-	 * @param model The RawModel to be rendered, which contains the VAO ID and
-	 *              vertex count.
-	 */
-	public void render(RawModel model) {
-		// Delegate the rendering of the model to the EntityRenderer class.
-		EntityRenderer.render(model);
-	}
+    /**
+     * Renders the specified TexturedModel by delegating the rendering process to the
+     * EntityRenderer. This method accepts a TexturedModel and uses the static
+     * render method of the EntityRenderer class to draw the model.
+     * 
+     * @param model The TexturedModel to be rendered, which contains the VAO ID,
+     *              vertex count, and texture data.
+     */
+    public void render(TexturedModel model) {
+        // Delegate the rendering of the model to the static render method in EntityRenderer.
+        EntityRenderer.render(model);
+    }
+
 }

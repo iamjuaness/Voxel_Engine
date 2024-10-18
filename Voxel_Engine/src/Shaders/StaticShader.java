@@ -19,14 +19,19 @@ public class StaticShader extends ShaderProgram {
 		super(vertexFile, fragmentFile);
 	}
 
-	/**
-	 * This method binds the attributes for the shader program. It specifies which
-	 * vertex attribute corresponds to which index in the shader.
-	 */
-	@Override
-	protected void bindAttributes() {
-		// Bind the "position" attribute to index 0
-		super.bindAttribute("position", 0);
-	}
+    /**
+     * Binds the attributes for the shader program. It specifies which vertex 
+     * attribute corresponds to which index in the shader. This setup is crucial 
+     * for properly linking vertex data (like positions and texture coordinates) 
+     * to their corresponding variables in the vertex shader.
+     */
+    @Override
+    protected void bindAttributes() {
+        // Bind the "position" attribute to index 0 in the shader
+        super.bindAttribute("position", 0);
+        // Bind the "textureCoords" attribute to index 1 in the shader
+        super.bindAttribute("textureCoords", 1);
+    }
+
 
 }
