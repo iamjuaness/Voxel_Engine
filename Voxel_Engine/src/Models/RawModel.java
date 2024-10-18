@@ -1,4 +1,4 @@
-package Models;
+package models;
 
 /**
  * The RawModel class represents a 3D model that has been loaded into OpenGL. It
