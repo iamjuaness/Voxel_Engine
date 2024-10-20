@@ -27,14 +27,8 @@ public class MainGameLoop {
     public static Loader loader1 = null;
     public static StaticShader shader1 = null;
     
-    // List of entities to be rendered in the game world.
     static List<Entity> entities = new ArrayList<Entity>();
-    
-    // Vector representing the position of the camera.
     static Vector3f camPos = new Vector3f(0, 0, 0);
-    
-    // List of positions that have been used for placing entities to avoid duplication.
-    static List<Vector3f> usedPos = new ArrayList<Vector3f>();
 
     /**
      * The main method that starts the game. It initializes the display, creates a
@@ -147,19 +141,12 @@ public class MainGameLoop {
             // Call the move method of the camera to update its position based on input.
             camera.move(); // Update camera position based on user input
             
-         // Get the current camera position for entity placement logic.
             camPos = camera.getPosition();
             
-            // Loop through a 20x20 grid around the camera's position to create entities.
-            for (int x = (int) (camPos.x - 10); x < camPos.x + 10; x++) {
-                for (int z = (int) (camPos.z - 10); z < camPos.z + 10; z++) {
-                    // Check if the position has already been used to avoid duplication.
-                    if (!usedPos.contains(new Vector3f(x, 0, z))) {
-                        // Create a new entity at the specified position and add it to the list.
-                        entities.add(new Entity(texturedModel, new Vector3f(x, 0, z), 0, 0, 0, 1));
-                        usedPos.add(new Vector3f(x, 0, z)); // Mark the position as used.
-                    }
-                }
+            for (int x = (int) (camPos.x -10); x < camPos.x + 10; x++) {
+            	for(int z = (int) (camPos.z - 10); z < camPos.z + 10; z++) {
+            		entities.add(new Entity(texturedModel, new Vector3f(x, 0, z), 0, 0, 0, 1));
+            	}
             }
 
             // Start using the shader program for rendering the entities.
@@ -168,9 +155,8 @@ public class MainGameLoop {
             // Load the camera view matrix into the shader.
             shader.loadViewMatrix(camera);
             
-            // Render each entity using the MasterRenderer and shader.
             for (Entity entity : entities) {
-                renderer.render(entity, shader);
+            	renderer.render(entity, shader);
             }
 
             // Stop using the shader after rendering.
