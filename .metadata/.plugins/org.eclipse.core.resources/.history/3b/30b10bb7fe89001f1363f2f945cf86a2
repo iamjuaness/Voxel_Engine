@@ -1,0 +1,24 @@
+package RenderEngine;
+
+import org.lwjgl.opengl.GL30;
+
+import Models.RawModel;
+
+public class Loader {
+
+	public RawModel loadToVao(float[] vertices) {}
+	
+	private int creatVAO() {
+		
+		int vaoID = GL30.glGenVertexArrays();
+		GL30.glBindVertexArray(vaoID);
+		
+		return vaoID;
+		
+	}
+	
+	private void storeDataInAttributeList(float[] data, int attributeNumber, int dimentions) {}
+	
+	public void cleanUp() {}
+	
+}

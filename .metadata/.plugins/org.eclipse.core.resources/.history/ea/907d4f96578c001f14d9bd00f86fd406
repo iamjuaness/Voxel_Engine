@@ -1,0 +1,15 @@
+#version 400 core
+
+// Input from the vertex buffer
+in vec3 position; // The position of the vertex
+
+// Output to the fragment shader
+out vec3 colour; // The color output from this vertex
+
+void main(void) {
+    // Set the position of the vertex in clip space
+    gl_Position = vec4(position, 1.0);
+
+    // Set the color output based on the position of the vertex
+    colour = vec3(position.x, position.y, position.z); // Convert position to color
+}

@@ -1,0 +1,12 @@
+#version 400 core
+
+// Input from the vertex shader
+in vec3 colour; // The color input from the vertex shader
+
+// Output to the framebuffer
+out vec4 out_Colour; // The final color output of the fragment
+
+void main(void) {
+    // Set the output color of the fragment with full opacity
+    out_Colour = vec4(colour, 1.0);
+}

@@ -1,0 +1,41 @@
+package entities;
+
+import org.lwjgl.util.vector.Vector3f;
+
+public class Camera {
+
+	Vector3f position;
+	float fotX, rotY, rotZ;
+	
+	
+	public Camera(Vector3f position, float fotX, float rotY, float rotZ) {
+		super();
+		this.position = position;
+		this.fotX = fotX;
+		this.rotY = rotY;
+		this.rotZ = rotZ;
+	}
+
+
+	public Vector3f getPosition() {
+		return position;
+	}
+
+
+	public float getFotX() {
+		return fotX;
+	}
+
+
+	public float getRotY() {
+		return rotY;
+	}
+
+
+	public float getRotZ() {
+		return rotZ;
+	}
+	
+	
+	
+}

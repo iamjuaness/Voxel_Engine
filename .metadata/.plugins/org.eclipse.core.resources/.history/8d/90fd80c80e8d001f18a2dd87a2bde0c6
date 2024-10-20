@@ -1,0 +1,14 @@
+package Toolbox;
+
+import org.lwjgl.util.vector.Matrix4f;
+
+public class Maths {
+	
+	public static Matrix4f createTransformationMatrix() {
+		
+		Matrix4f matrix = new Matrix4f();
+		
+		matrix.setIdentity();
+	}
+
+}

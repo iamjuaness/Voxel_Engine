@@ -1,0 +1,5 @@
+package Shaders;
+
+public class StaticShader {
+
+}
