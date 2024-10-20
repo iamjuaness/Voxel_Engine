@@ -12,8 +12,6 @@
     <fullyQualifiedTypeName name="org.lwjgl.opengl.GL15"/>
     <fullyQualifiedTypeName name="org.lwjgl.BufferUtils"/>
     <fullyQualifiedTypeName name="java.nio.FloatBuffer"/>
-    <fullyQualifiedTypeName name="java.util.List"/>
-    <fullyQualifiedTypeName name="java.util.ArrayList"/>
     <fullyQualifiedTypeName name="org.lwjgl.opengl.GL30"/>
     <fullyQualifiedTypeName name="RenderEngine.EntityRenderer"/>
     <fullyQualifiedTypeName name="Models.RawModel"/>
@@ -29,4 +27,11 @@
     <fullyQualifiedTypeName name="Shaders.ShaderProgram"/>
     <fullyQualifiedTypeName name="Shaders.StaticShader"/>
     <fullyQualifiedTypeName name="JuanCraft.MainGameLoop"/>
+    <fullyQualifiedTypeName name="entities.Entity"/>
+    <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="java.util.ArrayList"/>
+    <fullyQualifiedTypeName name="org.lwjgl.util.vector.Vector3f"/>
+    <fullyQualifiedTypeName name="java.util.Collections"/>
+    <fullyQualifiedTypeName name="java.lang.Thread"/>
+    <fullyQualifiedTypeName name="java.lang.Runnable"/>
 </qualifiedTypeNameHistroy>
