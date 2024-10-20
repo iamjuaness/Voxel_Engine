@@ -1,34 +1,42 @@
 package render_engine;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
-import entities.Entity;
-import shaders.StaticShader;
+import entities.Camera; // Camera class representing the player's view
+import entities.Entity; // Entity class representing 3D objects
+import models.TexturedModel; // Model class with textures
+import shaders.StaticShader; // Class representing the shader used for rendering
 
 /**
- * MasterRenderer is responsible for handling the rendering setup and
- * preparation for the game scene. It sets up the background color and clears
- * the screen before rendering new frames. Additionally, it handles the
- * rendering of 3D entities.
+ * The MasterRenderer class handles the overall rendering setup for the game scene.
+ * It prepares the OpenGL context, manages the projection matrix, and coordinates 
+ * the rendering of entities.
  */
 public class MasterRenderer {
     
-    private Matrix4f projectionMatrix; // The projection matrix used for perspective projection
+    private Matrix4f projectionMatrix; // The projection matrix for perspective projection
 
     private static final float FOV = 70f; // Field of View for the projection
     private static final float NEAR_PLANE = 0.1f; // Distance to the near clipping plane
     private static final float FAR_PLANE = 10000f; // Distance to the far clipping plane
+    
+    StaticShader shader = new StaticShader();
+    EntityRenderer renderer = new EntityRenderer();
+    Map<TexturedModel, List<Entity>> entities = new HashMap<TexturedModel, List<Entity>>();
 
     /**
      * Constructor for the MasterRenderer class. Initializes the projection matrix
      * and sets the shader for rendering.
-     * 
-     * @param shader The StaticShader to be used for rendering 3D entities.
      */
-    public MasterRenderer(StaticShader shader) {
-        createProjectionMatrix(); // Create the projection matrix for rendering
+    public MasterRenderer() {
+        createProjectionMatrix(); // Create the projection matrix
         shader.start(); // Start the shader program
         shader.loadProjectionMatrix(projectionMatrix); // Load the projection matrix into the shader
         shader.stop(); // Stop the shader program
@@ -36,65 +44,69 @@ public class MasterRenderer {
 
     /**
      * Prepares the OpenGL context for rendering by setting the clear color and
-     * clearing the color and depth buffers. This method should be called before rendering each
-     * new frame to ensure that the screen is cleared and ready for drawing.
-     * 
-     * - `glEnable(GL_DEPTH_TEST)` enables depth testing to ensure that closer objects
-     *   are rendered in front of farther ones.
-     * - `glClearColor` sets the background color to a light blue (RGB: 0.4, 0.7, 1.0)
-     *   with full opacity (alpha: 1.0).
-     * - `glClear` clears both the color buffer and the depth buffer, ensuring that
-     *   the screen is reset to the background color and prepared for drawing new elements.
+     * clearing the color and depth buffers. This should be called before each new frame.
      */
     public void prepare() {
-        // Enable depth testing to properly render the depth of objects.
+        // Enable depth testing to render closer objects in front of farther ones.
         GL11.glEnable(GL11.GL_DEPTH_TEST);
-
-        // Set the clear color to a light blue with RGB values (0.4, 0.7, 1.0) and full opacity (1).
+        // Set the clear color to light blue.
         GL11.glClearColor(0.4f, 0.7f, 1.0f, 1);
-
-        // Clear the color buffer and depth buffer to apply the new clear color and prepare the screen for drawing.
+        // Clear both color and depth buffers.
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
     /**
-     * Renders the specified Entity by delegating the rendering process to
-     * the EntityRenderer. This method accepts an Entity and uses the static
-     * render method of the EntityRenderer class to draw the model associated 
-     * with the entity.
+     * Renders the scene using the provided camera for view transformations.
      * 
-     * @param entity The Entity to be rendered, which contains the model's 
-     *               VAO ID, vertex count, and texture data.
-     * @param shader The StaticShader used for rendering the model, allowing 
-     *               transformation and texture application.
+     * @param camera The camera used to render the scene from a specific viewpoint.
      */
-    public void render(Entity entity, StaticShader shader) {
-        // Delegate the rendering of the model to the static render method in
-        // EntityRenderer.
-        EntityRenderer.render(entity, shader);
+    public void render(Camera camera) {
+        prepare(); // Prepare the rendering context
+        shader.start(); // Start the shader program
+        shader.loadViewMatrix(camera); // Load the camera view matrix into the shader
+        renderer.render(entities); // Render the entities
+        shader.stop(); // Stop the shader program
+        
+        entities.clear(); // Clear the entity map for the next frame
+    }
+    
+    /**
+     * Adds an entity to the rendering queue. Entities are batched by their textured model.
+     * 
+     * @param entity The entity to be added to the rendering queue.
+     */
+    public void addEntity(Entity entity) {
+    	TexturedModel model = entity.getModel();
+    	List<Entity> batch = entities.get(model);
+    	
+    	if (batch != null) {
+    		batch.add(entity); // Add to existing batch
+    	} else {
+    		List<Entity> newBatch = new ArrayList<Entity>();
+    		newBatch.add(entity); // Create a new batch for the new model
+    		entities.put(model, newBatch);
+    	}
     }
 
     /**
-     * Creates the projection matrix used for perspective rendering. This matrix
-     * defines how the 3D scene is projected onto the 2D screen based on the
-     * specified field of view, aspect ratio, and clipping planes.
+     * Creates the projection matrix used for perspective rendering.
      */
     public void createProjectionMatrix() {
         projectionMatrix = new Matrix4f(); // Initialize the projection matrix
 
-        // Calculate aspect ratio based on the display dimensions
+        // Calculate aspect ratio based on display dimensions
         float aspect = (float) Display.getWidth() / (float) Display.getHeight();
-        float yScale = (float) (1f / Math.tan(Math.toRadians(FOV / 2f))); // Calculate y scale based on FOV
-        float xScale = (float) yScale / aspect; // Calculate x scale based on aspect ratio
+        float yScale = (float) (1f / Math.tan(Math.toRadians(FOV / 2f))); // Calculate y scale
+        float xScale = (float) yScale / aspect; // Calculate x scale
         float zp = FAR_PLANE + NEAR_PLANE; // Sum of far and near planes
         float zm = FAR_PLANE - NEAR_PLANE; // Difference of far and near planes
 
-        // Set the elements of the projection matrix for perspective projection
-        projectionMatrix.m00 = xScale; // Set x scale in the matrix
-        projectionMatrix.m11 = yScale; // Set y scale in the matrix
-        projectionMatrix.m22 = -zp / zm; // Set z scale in the matrix
-        projectionMatrix.m23 = -1; // Set the w-component for perspective division
-        projectionMatrix.m32 = -(2 * FAR_PLANE * NEAR_PLANE) / zm; // Set the z translation
-        projectionMatrix.m33 = 0; // Set the last row for homogeneous coordinates
+        // Set the elements of the projection matrix
+        projectionMatrix.m00 = xScale; // Set x scale
+        projectionMatrix.m11 = yScale; // Set y scale
+        projectionMatrix.m22 = -zp / zm; // Set z scale
+        projectionMatrix.m23 = -1; // Set w-component
+        projectionMatrix.m32 = -(2 * FAR_PLANE * NEAR_PLANE) / zm; // Set z translation
+        projectionMatrix.m33 = 0; // Set last row for homogeneous coordinates
     }
 }

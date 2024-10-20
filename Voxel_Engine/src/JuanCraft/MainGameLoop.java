@@ -9,6 +9,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import entities.Camera;
 import entities.Entity;
+import models.CubeModel;
 import models.RawModel;
 import models.TexturedModel;
 import render_engine.DisplayManager;
@@ -25,8 +26,8 @@ import textures.Modeltexture;
 public class MainGameLoop {
 
     // Static references for loader and shader for use throughout the application.
-    public static Loader loader1 = null;
-    public static StaticShader shader1 = null;
+    public static Loader loader1 = null; // Loader instance for model loading
+    public static StaticShader shader1 = null; // Shader instance for rendering
     
     // List of entities to be rendered in the game world.
     static List<Entity> entities = Collections.synchronizedList(new ArrayList<Entity>());
@@ -38,7 +39,7 @@ public class MainGameLoop {
     static List<Vector3f> usedPos = new ArrayList<Vector3f>();
     
     // Defines the size of the world (distance from the camera in each direction).
-    static final int WORLD_SIZE = 15;
+    static final int WORLD_SIZE = 60;
 
     /**
      * The main method that starts the game. It initializes the display, creates a
@@ -57,82 +58,10 @@ public class MainGameLoop {
         shader1 = shader; // Store the shader instance for potential future use.
 
         // Instantiate the MasterRenderer to handle rendering operations.
-        MasterRenderer renderer = new MasterRenderer(shader1);
-
-        // Define vertices for a simple square model.
-        float[] vertices = { 
-            -0.5f, 0.5f, -0.5f,	
-            -0.5f, -0.5f, -0.5f,	
-            0.5f, -0.5f, -0.5f,	
-            0.5f, 0.5f, -0.5f,
-            -0.5f, 0.5f, 0.5f,	
-            -0.5f, -0.5f, 0.5f,	
-            0.5f, -0.5f, 0.5f,	
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, -0.5f,	
-            0.5f, -0.5f, -0.5f,	
-            0.5f, -0.5f, 0.5f,	
-            0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, -0.5f,	
-            -0.5f, -0.5f, -0.5f,	
-            -0.5f, -0.5f, 0.5f,	
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, 0.5f,
-            -0.5f, -0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, 0.5f
-        };
-
-        // Define indices for the square's two triangles.
-        int[] indices = { 
-            0, 1, 3,	
-            3, 1, 2,	
-            4, 5, 7,
-            7, 5, 6,
-            8, 9, 11,
-            11, 9, 10,
-            12, 13, 15,
-            15, 13, 14,	
-            16, 17, 19,
-            19, 17, 18,
-            20, 21, 23,
-            23, 21, 22
-        };
-
-        // Define texture coordinates (UV mapping) for the vertices.
-        float[] uv = { 
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,			
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,			
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1,
-            1, 1,
-            1, 0
-        };
+        MasterRenderer renderer = new MasterRenderer();
 
         // Load the vertices, indices, and UV coordinates into a RawModel.
-        RawModel model = loader.loadToVao(vertices, indices, uv);
+        RawModel model = loader.loadToVao(CubeModel.vertices, CubeModel.indices, CubeModel.uv);
 
         // Load a texture from the specified file and create a Modeltexture object.
         Modeltexture texture = new Modeltexture(loader.loadTexture("dirtTex"));
@@ -143,7 +72,7 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-     // Create a new thread to manage entities creation on the positive X and Z quadrant.
+        // Create a new thread to manage entities creation on the positive X and Z quadrant.
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -217,62 +146,44 @@ public class MainGameLoop {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                // Loop continuously while the display is open.
-                while (!Display.isCloseRequested()) {
-                    // Iterate over all existing entities.
-                    for (int i = 0; i < entities.size(); i++) {
-                        // Calculate the distance between the camera and the entity along the X-axis.
-                        int distX = (int) (camPos.x - entities.get(i).getPosition().x);
-                        // Calculate the distance between the camera and the entity along the Z-axis.
-                        int distZ = (int) (camPos.z - entities.get(i).getPosition().z);
-
-                        // Convert negative distances to positive values.
-                        if (distX < 0) {
-                            distX = -distX;
-                        }
-
-                        if (distZ < 0) {
-                            distZ = -distZ;
-                        }
-
-                        // If the entity is beyond the world size range, remove it.
-                        if ((distX > WORLD_SIZE) || (distZ > WORLD_SIZE)) {
-                            // Remove the entity's position from the used positions set.
-                            usedPos.remove(entities.get(i).getPosition());
-                            // Remove the entity from the list.
-                            entities.remove(i);
-                        }
-                    }
-                }
+                // This thread can be implemented to periodically check for and remove
+                // entities that are no longer within the viewable range of the camera.
             }
         }).start();
 
-        
-        
         // Main game loop, which runs continuously until the display requests to close.
         while (!Display.isCloseRequested()) {
-            // Prepare the rendering for the current frame (e.g., clear the screen).
-            renderer.prepare();
             
             // Call the move method of the camera to update its position based on input.
             camera.move(); // Update camera position based on user input
             
-         // Get the current camera position for entity placement logic.
+            // Get the current camera position for entity placement logic.
             camPos = camera.getPosition();
 
-            // Start using the shader program for rendering the entities.
-            shader.start();
-            
-            // Load the camera view matrix into the shader.
-            shader.loadViewMatrix(camera);
-            
             // Render each entity using the MasterRenderer and shader.
             for (int i = 0; i < entities.size(); i++) {
-                renderer.render(entities.get(i), shader);
-            }
+                // Calculate the distance between the camera and the entity along the X-axis.
+                int distX = (int) (camPos.x - entities.get(i).getPosition().x);
+                // Calculate the distance between the camera and the entity along the Z-axis.
+                int distZ = (int) (camPos.z - entities.get(i).getPosition().z);
 
-            // Stop using the shader after rendering.
-            shader.stop();
+                // Convert negative distances to positive values.
+                if (distX < 0) {
+                    distX = -distX;
+                }
+
+                if (distZ < 0) {
+                    distZ = -distZ;
+                }
+
+                // If the entity is beyond the world size range, remove it.
+                if ((distX <= WORLD_SIZE) && (distZ <= WORLD_SIZE)) {
+                    renderer.addEntity(entities.get(i)); // Add entity to the renderer if within range
+                }
+            }
+            
+            // Render the scene with the camera's current view.
+            renderer.render(camera);
 
             // Update the display (sync frame rate and render new frame).
             DisplayManager.updateDisplay();
