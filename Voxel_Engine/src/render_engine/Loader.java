@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -84,8 +85,21 @@ public class Loader {
 		// Initialize the texture object.
 		Texture texture = null;
 		try {
-			// Load the texture from a file in the "res" folder with a PNG format.
+			// Load a texture in PNG format from the "res" folder.
 			texture = TextureLoader.getTexture("PNG", getClass().getResourceAsStream("/res/" + fileName + ".PNG"));
+
+			// Generate mipmaps for smoother texture rendering at different distances.
+			GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+
+			// Set the minification filter to GL_NEAREST (blocky style when downsized).
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+
+			// Set the magnification filter to GL_NEAREST (blocky style when upscaled).
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+
+			// Apply a negative LOD bias for sharper textures.
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, -4);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

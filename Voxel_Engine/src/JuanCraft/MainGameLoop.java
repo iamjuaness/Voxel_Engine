@@ -9,7 +9,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import entities.Camera;
 import entities.Entity;
-import models.CubeModel;
+import models.AtlasCubeModel;
 import models.RawModel;
 import models.TexturedModel;
 import render_engine.DisplayManager;
@@ -39,7 +39,7 @@ public class MainGameLoop {
     static List<Vector3f> usedPos = new ArrayList<Vector3f>();
     
     // Defines the size of the world (distance from the camera in each direction).
-    static final int WORLD_SIZE = 60;
+    static final int WORLD_SIZE = 9 * 16;
 
     /**
      * The main method that starts the game. It initializes the display, creates a
@@ -61,10 +61,10 @@ public class MainGameLoop {
         MasterRenderer renderer = new MasterRenderer();
 
         // Load the vertices, indices, and UV coordinates into a RawModel.
-        RawModel model = loader.loadToVao(CubeModel.vertices, CubeModel.indices, CubeModel.uv);
+        RawModel model = loader.loadToVao(AtlasCubeModel.vertices, AtlasCubeModel.indices, AtlasCubeModel.uv);
 
         // Load a texture from the specified file and create a Modeltexture object.
-        Modeltexture texture = new Modeltexture(loader.loadTexture("dirtTex"));
+        Modeltexture texture = new Modeltexture(loader.loadTexture("grassTex"));
 
         // Create a TexturedModel object using the loaded texture and the 3D model.
         TexturedModel texturedModel = new TexturedModel(model, texture);
