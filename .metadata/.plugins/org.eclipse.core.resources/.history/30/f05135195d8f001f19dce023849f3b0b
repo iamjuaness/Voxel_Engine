@@ -1,0 +1,14 @@
+package juancraft;
+
+import java.util.List;
+
+import org.lwjgl.util.vector.Vector3f;
+
+import entities.Entity;
+
+public class Chunck {
+	
+	private List<Entity> blocks;
+	private Vector3f origin;
+
+}

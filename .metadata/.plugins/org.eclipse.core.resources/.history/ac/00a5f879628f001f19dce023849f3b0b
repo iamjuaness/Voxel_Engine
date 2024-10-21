@@ -29,7 +29,7 @@ public class MainGameLoop {
     public static Loader loader1 = null; // Loader instance for model loading
     public static StaticShader shader1 = null; // Shader instance for rendering
     
-    // List of chunks to be rendered in the game world.
+    // List of entities to be rendered in the game world.
     static List<Chunck> chunks = Collections.synchronizedList(new ArrayList<Chunck>());
     
     // Vector representing the position of the camera.
@@ -72,7 +72,7 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-        // Create a new thread to manage entities creation in the positive X and Z quadrant.
+        // Create a new thread to manage entities creation on the positive X and Z quadrant.
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -82,27 +82,22 @@ public class MainGameLoop {
                     for (int x = (int) (camPos.x - WORLD_SIZE) / 16; x < (camPos.x + WORLD_SIZE) / 16; x++) {
                         for (int z = (int) (camPos.z - WORLD_SIZE) / 16; z < (camPos.z + WORLD_SIZE) / 16; z++) {
                             // Check if the position is already used to avoid duplicate entities.
-                            if (!usedPos.contains(new Vector3f(x * 16, 0, z * 16))) {
+                            if (!usedPos.contains(new Vector3f(x * 16, 0 * 16, z * 16))) {
+                            	
+                            	List<Entity> blocks = new ArrayList<Entity>();
+                            	
+                            	for (int i = 0; i < 16; i++) {
+                            		for (int j = 0; j < 16; j++) {
+                            			
+                            			blocks.add(new Entity(texturedModel, new Vector3f((x * 16) + i, 0, (z*16) + j), 0, 0, 0, 1));
+                            			
+                            		}
+                            	}
                                 
-                                // Create a list of blocks (entities) for the current chunk.
-                                List<Entity> blocks = new ArrayList<Entity>();
-                                
-                                // Loop to create a 16x16 grid of blocks for the current chunk.
-                                for (int i = 0; i < 16; i++) {
-                                    for (int j = 0; j < 16; j++) {
-                                        blocks.add(new Entity(
-                                            texturedModel,
-                                            new Vector3f((x * 16) + i, 0, (z * 16) + j),
-                                            0, 0, 0, 1
-                                        ));
-                                    }
-                                }
-                                
-                                // Add the new chunk to the list of chunks.
-                                chunks.add(new Chunck(blocks, new Vector3f(x * 16, 0, z * 16)));
-                                
+                            	
+                            	chunks.add(new Chunck(blocks, new Vector3f(x * 16, 0 * 16, z * 16)));
                                 // Mark the position as used.
-                                usedPos.add(new Vector3f(x * 16, 0, z * 16));
+                                usedPos.add(new Vector3f(x * 16, 0 * 16, z * 16));
                             }
                         }
                     }
@@ -119,15 +114,14 @@ public class MainGameLoop {
             // Get the current camera position for entity placement logic.
             camPos = camera.getPosition();
 
-            // Render each chunk if within the specified world size.
+            // Render each entity using the MasterRenderer and shader.
             for (int i = 0; i < chunks.size(); i++) {
-                
-                Vector3f origin = chunks.get(i).getOrigin();
-                
-                // Calculate the distance between the camera and the chunk along the X-axis.
-                int distX = (int) (camPos.x - origin.x);
-                // Calculate the distance between the camera and the chunk along the Z-axis.
-                int distZ = (int) (camPos.z - origin.z);
+            	
+            	Vector3f origin = chunks.get(i).getOrigin();
+                // Calculate the distance between the camera and the entity along the X-axis.
+                int distX = (int) (camPos.x - entities.get(i).getPosition().x);
+                // Calculate the distance between the camera and the entity along the Z-axis.
+                int distZ = (int) (camPos.z - entities.get(i).getPosition().z);
 
                 // Convert negative distances to positive values.
                 if (distX < 0) {
@@ -138,11 +132,9 @@ public class MainGameLoop {
                     distZ = -distZ;
                 }
 
-                // If the chunk is within the world size range, render its blocks.
-                if (distX <= WORLD_SIZE && distZ <= WORLD_SIZE) {
-                    for (Entity block : chunks.get(i).getBlocks()) {
-                        renderer.addEntity(block); // Add each block entity to the renderer.
-                    }
+                // If the entity is beyond the world size range, remove it.
+                if ((distX <= WORLD_SIZE) && (distZ <= WORLD_SIZE)) {
+                    renderer.addEntity(entities.get(i)); // Add entity to the renderer if within range
                 }
             }
             

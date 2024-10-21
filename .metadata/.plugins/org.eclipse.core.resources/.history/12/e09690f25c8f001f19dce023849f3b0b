@@ -1,0 +1,11 @@
+package juancraft;
+
+import java.util.List;
+
+import entities.Entity;
+
+public class Chunck {
+	
+	List<Entity> blocksñ
+
+}

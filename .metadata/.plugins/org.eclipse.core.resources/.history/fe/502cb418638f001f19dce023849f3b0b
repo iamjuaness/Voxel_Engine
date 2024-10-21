@@ -130,13 +130,8 @@ public class MainGameLoop {
                 int distZ = (int) (camPos.z - origin.z);
 
                 // Convert negative distances to positive values.
-                if (distX < 0) {
-                    distX = -distX;
-                }
-
-                if (distZ < 0) {
-                    distZ = -distZ;
-                }
+                distX = Math.abs(distX);
+                distZ = Math.abs(distZ);
 
                 // If the chunk is within the world size range, render its blocks.
                 if (distX <= WORLD_SIZE && distZ <= WORLD_SIZE) {

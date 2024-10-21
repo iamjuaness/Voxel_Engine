@@ -17,7 +17,7 @@ public class Camera {
     private float rotX, rotY, rotZ;
     
     // Speed at which the camera moves.
-    private float speed = 0.3f;
+    private float speed = 0.1f;
     
     // Speed at which the camera rotates.
     private float turnSpeed = 0.1f;
