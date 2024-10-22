@@ -25,14 +25,14 @@ public class ChunkMesh {
     public float[] positions, uvs, normals;
 
     // The chunk that this mesh represents.
-    public Chunk chunck;
+    public Chunck chunck;
 
     /**
      * Constructs a ChunkMesh object for a given chunk and builds its mesh.
      *
      * @param chunck The chunk to generate the mesh for.
      */
-    public ChunkMesh(Chunk chunck) {
+    public ChunkMesh(Chunck chunck) {
         this.chunck = chunck;
 
         // Initialize vertex lists.
@@ -51,7 +51,7 @@ public class ChunkMesh {
      *
      * @param chunck The new chunk to update the mesh for.
      */
-    public void update(Chunk chunck) {
+    public void update(Chunck chunck) {
         this.chunck = chunck;
 
         // Rebuild the mesh and repopulate the vertex data lists.

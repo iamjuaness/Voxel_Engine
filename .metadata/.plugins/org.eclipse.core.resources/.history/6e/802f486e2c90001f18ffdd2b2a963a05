@@ -45,7 +45,7 @@ public class MainGameLoop {
     static List<Entity> entities = new ArrayList<Entity>();
     
     // Defines the size of the world (distance from the camera in each direction).
-    static final int WORLD_SIZE = 9 * 32;
+    static final int WORLD_SIZE = 9 * 16;
 
     /**
      * The main method that starts the game. It initializes the display, creates a
@@ -85,29 +85,29 @@ public class MainGameLoop {
                 // Loop continuously while the display is open.
                 while (!Display.isCloseRequested()) {
                     // Loop through a 20x20 grid area in the positive X and Z quadrant around the camera.
-                    for (int x = (int) (camPos.x - WORLD_SIZE) / 32; x < (camPos.x + WORLD_SIZE) / 32; x++) {
-                        for (int z = (int) (camPos.z - WORLD_SIZE) / 32; z < (camPos.z + WORLD_SIZE) / 32; z++) {
+                    for (int x = (int) (camPos.x - WORLD_SIZE) / 16; x < (camPos.x + WORLD_SIZE) / 16; x++) {
+                        for (int z = (int) (camPos.z - WORLD_SIZE) / 16; z < (camPos.z + WORLD_SIZE) / 16; z++) {
                             // Check if the position is already used to avoid duplicate entities.
-                            if (!usedPos.contains(new Vector3f(x * 32, 0, z * 32))) {
+                            if (!usedPos.contains(new Vector3f(x * 16, 0, z * 16))) {
                                 
                                 // Create a list of blocks (entities) for the current chunk.
                                 List<Block> blocks = new ArrayList<Block>();
                                 
                                 // Loop to create a 16x16 grid of blocks for the current chunk.
-                                for (int i = 0; i < 32; i++) {
-                                    for (int j = 0; j < 32; j++) {
+                                for (int i = 0; i < 16; i++) {
+                                    for (int j = 0; j < 16; j++) {
                                         blocks.add(new Block(i, 0, j, TYPE.DIRT));
                                     }
                                 }
                                 
-                                Chunk chunk = new Chunk(blocks, new Vector3f(x * 32, 0, z * 32));
+                                Chunk chunk = new Chunk(blocks, new Vector3f(x * 16, 0, z * 16));
                                 ChunkMesh mesh = new ChunkMesh(chunk);
                                 
                                 // Add the new chunk to the list of chunks.
                                 chunks.add(mesh);
                                 
                                 // Mark the position as used.
-                                usedPos.add(new Vector3f(x * 32, 0, z * 32));
+                                usedPos.add(new Vector3f(x * 16, 0, z * 16));
                             }
                         }
                     }
