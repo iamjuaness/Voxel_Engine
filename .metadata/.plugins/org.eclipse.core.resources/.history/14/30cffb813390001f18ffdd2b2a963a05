@@ -1,0 +1,25 @@
+package cube;
+
+public class Block {
+    
+    // Public member variables representing the position of the Block in a 3D grid.
+    public int x, y, z;  // The X, Y, Z coordinates of the Block in a 3D space.
+
+    public static int GRASS = 0;
+    public static int DIRT = 0;
+    public static int STONE = 0;
+    public static int TREEBARK = 0;
+    public static int TREELEAF = 0;
+
+    // The type of the Block (can be DIRT or GRASS).
+    public TYPE type;
+
+    // Constructor for the Block class.
+    // It initializes a Block object with specified X, Y, Z coordinates and a type (DIRT or GRASS).
+    public Block(int x, int y, int z, TYPE type) {
+        this.x = x;      // Set the X coordinate
+        this.y = y;      // Set the Y coordinate
+        this.z = z;      // Set the Z coordinate
+        this.type = type; // Set the type of the Block (DIRT or GRASS)
+    }
+}
