@@ -79,7 +79,7 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-        // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
+     // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
         PerlinNoiseGenerator generator = new PerlinNoiseGenerator();
 
         // Create a new thread to manage entity creation in the positive X and Z quadrant.

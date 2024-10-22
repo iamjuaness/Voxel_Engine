@@ -21,7 +21,6 @@ import render_engine.Loader;
 import render_engine.MasterRenderer;
 import shaders.StaticShader;
 import textures.Modeltexture;
-import toolbox.PerlinNoiseGenerator;
 
 /**
  * The MainGameLoop class is the entry point of the JuanCraft game application.
@@ -79,16 +78,13 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-        // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
-        PerlinNoiseGenerator generator = new PerlinNoiseGenerator();
-
-        // Create a new thread to manage entity creation in the positive X and Z quadrant.
+        // Create a new thread to manage entities creation in the positive X and Z quadrant.
         new Thread(new Runnable() {
             @Override
             public void run() {
                 // Loop continuously while the display is open.
                 while (!Display.isCloseRequested()) {
-                    // Loop through a 32x32 grid area in the positive X and Z quadrant around the camera.
+                    // Loop through a 20x20 grid area in the positive X and Z quadrant around the camera.
                     for (int x = (int) (camPos.x - WORLD_SIZE) / 32; x < (camPos.x + WORLD_SIZE) / 32; x++) {
                         for (int z = (int) (camPos.z - WORLD_SIZE) / 32; z < (camPos.z + WORLD_SIZE) / 32; z++) {
                             // Check if the position is already used to avoid duplicate entities.
@@ -97,12 +93,10 @@ public class MainGameLoop {
                                 // Create a list of blocks (entities) for the current chunk.
                                 List<Block> blocks = new ArrayList<Block>();
                                 
-                                // Loop to create a 32x32 grid of blocks for the current chunk.
+                                // Loop to create a 16x16 grid of blocks for the current chunk.
                                 for (int i = 0; i < 32; i++) {
                                     for (int j = 0; j < 32; j++) {
-                                        // Generate the height for the block using Perlin noise.
-                                        // The height is calculated based on the current chunk position and the noise generator.
-                                        blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), j + (z * 32)), j, TYPE.DIRT));
+                                        blocks.add(new Block(i, 0, j, TYPE.DIRT));
                                     }
                                 }
                                 

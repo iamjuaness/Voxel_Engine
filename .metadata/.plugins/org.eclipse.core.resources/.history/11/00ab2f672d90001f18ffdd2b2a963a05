@@ -21,7 +21,6 @@ import render_engine.Loader;
 import render_engine.MasterRenderer;
 import shaders.StaticShader;
 import textures.Modeltexture;
-import toolbox.PerlinNoiseGenerator;
 
 /**
  * The MainGameLoop class is the entry point of the JuanCraft game application.
@@ -79,16 +78,13 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-        // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
-        PerlinNoiseGenerator generator = new PerlinNoiseGenerator();
-
-        // Create a new thread to manage entity creation in the positive X and Z quadrant.
+        // Create a new thread to manage entities creation in the positive X and Z quadrant.
         new Thread(new Runnable() {
             @Override
             public void run() {
                 // Loop continuously while the display is open.
                 while (!Display.isCloseRequested()) {
-                    // Loop through a 32x32 grid area in the positive X and Z quadrant around the camera.
+                    // Loop through a 20x20 grid area in the positive X and Z quadrant around the camera.
                     for (int x = (int) (camPos.x - WORLD_SIZE) / 32; x < (camPos.x + WORLD_SIZE) / 32; x++) {
                         for (int z = (int) (camPos.z - WORLD_SIZE) / 32; z < (camPos.z + WORLD_SIZE) / 32; z++) {
                             // Check if the position is already used to avoid duplicate entities.
@@ -97,24 +93,20 @@ public class MainGameLoop {
                                 // Create a list of blocks (entities) for the current chunk.
                                 List<Block> blocks = new ArrayList<Block>();
                                 
-                                // Loop to create a 32x32 grid of blocks for the current chunk.
+                                // Loop to create a 16x16 grid of blocks for the current chunk.
                                 for (int i = 0; i < 32; i++) {
                                     for (int j = 0; j < 32; j++) {
-                                        // Generate the height for the block using Perlin noise.
-                                        // The height is calculated based on the current chunk position and the noise generator.
-                                        blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), j + (z * 32)), j, TYPE.DIRT));
+                                        blocks.add(new Block(i, 0, j, TYPE.DIRT));
                                     }
                                 }
                                 
-                                // Create a new chunk at the calculated position.
                                 Chunk chunk = new Chunk(blocks, new Vector3f(x * 32, 0, z * 32));
-                                // Create a mesh for the chunk based on its blocks.
                                 ChunkMesh mesh = new ChunkMesh(chunk);
                                 
-                                // Add the new chunk mesh to the list of chunks.
+                                // Add the new chunk to the list of chunks.
                                 chunks.add(mesh);
                                 
-                                // Mark the position as used to avoid duplication.
+                                // Mark the position as used.
                                 usedPos.add(new Vector3f(x * 32, 0, z * 32));
                             }
                         }
@@ -123,45 +115,89 @@ public class MainGameLoop {
             }
         }).start();
         
+        // Create a list to hold block entities for a single chunk.
+        /*List<Block> blocks = new ArrayList<Block>();
+        
+        // Create a 10x10x10 chunk filled with "dirt" blocks.
+        for (int x = 0; x < 10; x++) {
+            for (int y = 0; y < 10; y++) {
+                for (int z = 0; z < 10; z++) {
+                    // Add a new "dirt" block at each (x, y, z) position.
+                    blocks.add(new Block(x, y, z, TYPE.DIRT));
+                }
+            }
+        }
+        
+        // Create a new chunk at the origin using the generated blocks.
+        Chunk chunck = new Chunk(blocks, new Vector3f(0, 0, 0));
+        
+        // Create the mesh for the chunk.
+        ChunkMesh mesh = new ChunkMesh(chunck);
+        
+        // Load the chunk's mesh data into a RawModel.
+        RawModel model123 = loader.loadToVao(mesh.positions, mesh.uvs);
+        
+        // Create a textured model for the chunk using the loaded texture.
+        TexturedModel texModel = new TexturedModel(model123, texture);
+        
+        // Create an entity for the chunk, to be placed at the origin.
+        Entity entity = new Entity(texModel, new Vector3f(0, 0, 0), 0, 0, 0, 1);*/
+
         // Main game loop, which runs continuously until the display requests to close.
-        int index = 0; // Index for tracking chunks to be loaded
+        int index = 0;
         while (!Display.isCloseRequested()) {
             
-            // Update camera position based on user input.
-            camera.move(); 
+            // Call the move method of the camera to update its position based on input.
+            camera.move(); // Update camera position based on user input
             
             // Get the current camera position for entity placement logic.
             camPos = camera.getPosition();
             
-            // Load chunks into the world until we reach the limit.
+            
             if (index < chunks.size()) {
+                
+                
                 // Load the chunk's mesh data into a RawModel.
                 RawModel model123 = loader.loadToVao(chunks.get(index).positions, chunks.get(index).uvs);
                 
                 // Create a textured model for the chunk using the loaded texture.
                 TexturedModel texModel = new TexturedModel(model123, texture);
                 
-                // Create an entity for the chunk, placed at the chunk's origin.
+                // Create an entity for the chunk, to be placed at the origin.
                 Entity entity = new Entity(texModel, chunks.get(index).chunck.getOrigin(), 0, 0, 0, 1);
-                entities.add(entity); // Add the new entity to the list of entities
+                entities.add(entity);
                 
-                index++; // Move to the next chunk
+                index++;
             }
             
-            // Render each chunk entity that is within the specified world size.
+            // Render each chunk if within the specified world size.
             for (int i = 0; i < entities.size(); i++) {
-                Vector3f origin = entities.get(i).getPosition(); // Get the position of the entity
                 
-                // Calculate the distance from the camera to the chunk along the X and Z axes.
-                int distX = Math.abs((int) (camPos.x - origin.x));
-                int distZ = Math.abs((int) (camPos.z - origin.z));
+                Vector3f origin = entities.get(i).getPosition();
+                
+                // Calculate the distance between the camera and the chunk along the X-axis.
+                int distX = (int) (camPos.x - origin.x);
+                // Calculate the distance between the camera and the chunk along the Z-axis.
+                int distZ = (int) (camPos.z - origin.z);
+
+                // Convert negative distances to positive values.
+                if (distX < 0) {
+                    distX = -distX;
+                }
+
+                if (distZ < 0) {
+                    distZ = -distZ;
+                }
 
                 // If the chunk is within the world size range, render its blocks.
                 if (distX <= WORLD_SIZE && distZ <= WORLD_SIZE) {
-                    renderer.addEntity(entities.get(i)); // Add entity for rendering
+                    renderer.addEntity(entities.get(i));
                 }
             }
 
+            // Render the chunk entity.
+            //renderer.addEntity(entity);
+            
             // Render the scene with the camera's current view.
             renderer.render(camera);
 

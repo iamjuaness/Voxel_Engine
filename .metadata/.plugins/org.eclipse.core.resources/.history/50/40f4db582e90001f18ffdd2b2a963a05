@@ -79,10 +79,9 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-        // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
         PerlinNoiseGenerator generator = new PerlinNoiseGenerator();
-
-        // Create a new thread to manage entity creation in the positive X and Z quadrant.
+        
+        // Create a new thread to manage entities creation in the positive X and Z quadrant.
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -100,9 +99,7 @@ public class MainGameLoop {
                                 // Loop to create a 32x32 grid of blocks for the current chunk.
                                 for (int i = 0; i < 32; i++) {
                                     for (int j = 0; j < 32; j++) {
-                                        // Generate the height for the block using Perlin noise.
-                                        // The height is calculated based on the current chunk position and the noise generator.
-                                        blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), j + (z * 32)), j, TYPE.DIRT));
+                                        blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), z), j, TYPE.DIRT));
                                     }
                                 }
                                 
