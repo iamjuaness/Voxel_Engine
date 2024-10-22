@@ -1,0 +1,44 @@
+package chunks;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import cube.Vertex;
+
+public class ChunkMesh {
+
+	private List<Vertex> vertices;
+	private List<Float> positionList;
+	private List<Float> uvsList;
+	private List<Float> normalsList;
+	
+	public float[] positions, uvs, normals;
+	
+	public Chunck chunck;
+	
+	public ChunkMesh(Chunck chunck) {
+		
+		this.chunck = chunck;
+		
+		vertices = new ArrayList<Vertex>();
+		positionList = new ArrayList<Float>();
+		uvsList = new ArrayList<Float>();
+	}
+	
+	public void update(Chunck chunck) {
+		this.chunck = chunck;
+		
+		buildMesh();
+		populateLists();
+	}
+
+	private void buildMesh() {
+		
+	}
+	
+	private void populateLists() {
+		
+	}
+	
+	
+}

@@ -18,192 +18,210 @@ import org.newdawn.slick.opengl.TextureLoader;
 import models.RawModel;
 
 /**
- * The Loader class is responsible for loading 3D model data into OpenGL and
- * managing VAOs (Vertex Array Objects) and VBOs (Vertex Buffer Objects). It
- * stores vertex data in VBOs, binds them to VAOs, and keeps track of the
- * created VAOs and VBOs for later cleanup.
+ * The Loader class is responsible for loading 3D model data into OpenGL and 
+ * managing Vertex Array Objects (VAOs) and Vertex Buffer Objects (VBOs). 
+ * It handles storing vertex data in VBOs, binding them to VAOs, and 
+ * keeps track of the created VAOs and VBOs for later cleanup.
  */
 public class Loader {
 
-	// List to store IDs of all created VAOs, used for cleanup.
-	static List<Integer> vaos = new ArrayList<Integer>();
-	// List to store IDs of all created VBOs, used for cleanup.
-	static List<Integer> vbos = new ArrayList<Integer>();
-	// List to store IDs of all created textures, used for cleanup.
-	static List<Integer> textures = new ArrayList<Integer>();
+    // List to store IDs of all created VAOs, used for cleanup.
+    static List<Integer> vaos = new ArrayList<Integer>();
+    // List to store IDs of all created VBOs, used for cleanup.
+    static List<Integer> vbos = new ArrayList<Integer>();
+    // List to store IDs of all created textures, used for cleanup.
+    static List<Integer> textures = new ArrayList<Integer>();
 
-	/**
-	 * Loads the provided vertex data into a VAO and returns a RawModel object.
-	 * 
-	 * @param vertices Array of vertex data to be loaded into the VAO.
-	 * @param indices  Array of index data for indexed drawing.
-	 * @param uv       Array of texture coordinates (UV mapping) for the vertices.
-	 * @return A RawModel containing the ID of the created VAO and the number of
-	 *         vertices.
-	 */
-	public RawModel loadToVao(float[] vertices, int[] indices, float[] uv) {
+    /**
+     * Loads the provided vertex data into a VAO and returns a RawModel object.
+     * 
+     * @param vertices Array of vertex data to be loaded into the VAO.
+     * @param indices  Array of index data for indexed drawing.
+     * @param uv       Array of texture coordinates (UV mapping) for the vertices.
+     * @return A RawModel containing the ID of the created VAO and the number of
+     *         vertices.
+     */
+    public RawModel loadToVao(float[] vertices, int[] indices, float[] uv) {
+        // Create a new VAO and bind the vertex data to it.
+        int vaoID = creatVAO(); // Create VAO
+        storeDataInAttributeList(vertices, 0, 3); // Store vertex positions
+        storeDataInAttributeList(uv, 1, 2); // Store texture coordinates
 
-		// Create a new VAO and bind the vertex data to it.
-		int vaoID = creatVAO();
-		storeDataInAttributeList(vertices, 0, 3);
-		storeDataInAttributeList(uv, 1, 2);
+        // Bind index buffer for indexed drawing.
+        bindIndicesbuffer(indices);
+        // Unbind the VAO to prevent further modification.
+        GL30.glBindVertexArray(0);
 
-		// Bind index buffer for indexed drawing.
-		bindIndicesbuffer(indices);
-		// Unbind the VAO to prevent further modification.
-		GL30.glBindVertexArray(0);
+        // Return a new RawModel with the ID of the VAO and the length of the indices array.
+        return new RawModel(vaoID, indices.length);
+    }
 
-		// Return a new RawModel with the ID of the VAO and the length of the indices
-		// array.
-		return new RawModel(vaoID, indices.length);
-	}
+    /**
+     * Loads the provided vertex data into a VAO and returns a RawModel object.
+     * 
+     * @param vertices Array of vertex data to be loaded into the VAO.
+     * @param uv       Array of texture coordinates (UV mapping) for the vertices.
+     * @return A RawModel containing the ID of the created VAO and the number of
+     *         vertices.
+     */
+    public RawModel loadToVao(float[] vertices, float[] uv) {
+        // Create a new VAO and bind the vertex data to it.
+        int vaoID = creatVAO(); // Create VAO
+        storeDataInAttributeList(vertices, 0, 3); // Store vertex positions
+        storeDataInAttributeList(uv, 1, 2); // Store texture coordinates
 
-	/**
-	 * Creates a new VAO (Vertex Array Object) and binds it.
-	 * 
-	 * @return The ID of the created VAO.
-	 */
-	private int creatVAO() {
-		// Generate a new VAO ID using OpenGL.
-		int vaoID = GL30.glGenVertexArrays();
-		// Store the VAO ID for cleanup purposes.
-		vaos.add(vaoID);
-		// Bind the VAO to start using it.
-		GL30.glBindVertexArray(vaoID);
+        // Unbind the VAO to prevent further modification.
+        GL30.glBindVertexArray(0);
 
-		return vaoID;
-	}
+        // Return a new RawModel with the ID of the VAO and the length of the vertex array.
+        return new RawModel(vaoID, vertices.length);
+    }
 
-	/**
-	 * Loads a texture from the resources folder and returns its OpenGL texture ID.
-	 * 
-	 * @param fileName The name of the texture file to be loaded (without
-	 *                 extension).
-	 * @return The OpenGL texture ID of the loaded texture.
-	 */
-	public int loadTexture(String fileName) {
-		// Initialize the texture object.
-		Texture texture = null;
-		try {
-			// Load a texture in PNG format from the "res" folder.
-			texture = TextureLoader.getTexture("PNG", getClass().getResourceAsStream("/res/" + fileName + ".PNG"));
+    /**
+     * Creates a new VAO (Vertex Array Object) and binds it.
+     * 
+     * @return The ID of the created VAO.
+     */
+    private int creatVAO() {
+        // Generate a new VAO ID using OpenGL.
+        int vaoID = GL30.glGenVertexArrays();
+        // Store the VAO ID for cleanup purposes.
+        vaos.add(vaoID);
+        // Bind the VAO to start using it.
+        GL30.glBindVertexArray(vaoID);
 
-			// Generate mipmaps for smoother texture rendering at different distances.
-			GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+        return vaoID;
+    }
 
-			// Set the minification filter to GL_NEAREST (blocky style when downsized).
-			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+    /**
+     * Loads a texture from the resources folder and returns its OpenGL texture ID.
+     * 
+     * @param fileName The name of the texture file to be loaded (without extension).
+     * @return The OpenGL texture ID of the loaded texture.
+     */
+    public int loadTexture(String fileName) {
+        // Initialize the texture object.
+        Texture texture = null;
+        try {
+            // Load a texture in PNG format from the "res" folder.
+            texture = TextureLoader.getTexture("PNG", getClass().getResourceAsStream("/res/" + fileName + ".PNG"));
 
-			// Set the magnification filter to GL_NEAREST (blocky style when upscaled).
-			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            // Generate mipmaps for smoother texture rendering at different distances.
+            GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
 
-			// Apply a negative LOD bias for sharper textures.
-			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, -4);
+            // Set the minification filter to GL_NEAREST (blocky style when downsized).
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+            // Set the magnification filter to GL_NEAREST (blocky style when upscaled).
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-		// Get the texture ID generated by OpenGL.
-		int textureID = texture.getTextureID();
-		// Store the texture ID for cleanup purposes.
-		textures.add(textureID);
+            // Apply a negative LOD bias for sharper textures.
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, -4);
 
-		return textureID;
-	}
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-	/**
-	 * Stores the provided vertex data into a VBO (Vertex Buffer Object) and binds
-	 * it to a specific attribute list of the current VAO.
-	 * 
-	 * @param data            The vertex data to be stored in the VBO.
-	 * @param attributeNumber The index of the attribute list where the data will be
-	 *                        stored.
-	 * @param dimensions      The number of dimensions of each vertex (e.g., 3 for
-	 *                        x, y, z).
-	 */
-	private void storeDataInAttributeList(float[] data, int attributeNumber, int dimensions) {
-		// Generate a new VBO ID using OpenGL.
-		int vboID = GL15.glGenBuffers();
-		// Store the VBO ID for cleanup purposes.
-		vbos.add(vboID);
-		// Bind the VBO to the array buffer target.
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
-		// Convert the data into a FloatBuffer.
-		FloatBuffer buffer = storeDataInFloatBuffer(data);
-		// Store the buffer data in the VBO with dynamic draw usage.
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_DYNAMIC_DRAW);
-		// Link the VBO to the specified attribute list of the VAO.
-		GL20.glVertexAttribPointer(attributeNumber, dimensions, GL11.GL_FLOAT, false, 0, 0);
-		// Unbind the VBO to prevent further modification.
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-	}
+        // Get the texture ID generated by OpenGL.
+        int textureID = texture.getTextureID();
+        // Store the texture ID for cleanup purposes.
+        textures.add(textureID);
 
-	/**
-	 * Binds an index buffer to the current VAO for indexed drawing.
-	 * 
-	 * @param indices Array of indices for drawing the vertices.
-	 */
-	private void bindIndicesbuffer(int[] indices) {
-		// Generate a new VBO ID for the index buffer.
-		int vboID = GL15.glGenBuffers();
-		// Store the VBO ID for cleanup purposes.
-		vbos.add(vboID);
-		// Bind the VBO to the element array buffer target.
-		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboID);
-		// Convert the indices into an IntBuffer.
-		IntBuffer buffer = storeDataInIntBuffer(indices);
-		// Store the buffer data in the VBO with static draw usage.
-		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-	}
+        return textureID;
+    }
 
-	/**
-	 * Converts an array of integers into an IntBuffer to be used by OpenGL.
-	 * 
-	 * @param data The integer array to be converted into an IntBuffer.
-	 * @return An IntBuffer containing the provided data.
-	 */
-	IntBuffer storeDataInIntBuffer(int[] data) {
-		// Create a new IntBuffer with the same size as the data array.
-		IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
-		// Put the data into the buffer.
-		buffer.put(data);
-		// Flip the buffer to prepare it for reading.
-		buffer.flip();
+    /**
+     * Stores the provided vertex data into a VBO (Vertex Buffer Object) and binds
+     * it to a specific attribute list of the current VAO.
+     * 
+     * @param data            The vertex data to be stored in the VBO.
+     * @param attributeNumber The index of the attribute list where the data will be
+     *                        stored.
+     * @param dimensions      The number of dimensions of each vertex (e.g., 3 for
+     *                        x, y, z).
+     */
+    private void storeDataInAttributeList(float[] data, int attributeNumber, int dimensions) {
+        // Generate a new VBO ID using OpenGL.
+        int vboID = GL15.glGenBuffers();
+        // Store the VBO ID for cleanup purposes.
+        vbos.add(vboID);
+        // Bind the VBO to the array buffer target.
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
+        // Convert the data into a FloatBuffer.
+        FloatBuffer buffer = storeDataInFloatBuffer(data);
+        // Store the buffer data in the VBO with dynamic draw usage.
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_DYNAMIC_DRAW);
+        // Link the VBO to the specified attribute list of the VAO.
+        GL20.glVertexAttribPointer(attributeNumber, dimensions, GL11.GL_FLOAT, false, 0, 0);
+        // Unbind the VBO to prevent further modification.
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+    }
 
-		return buffer;
-	}
+    /**
+     * Binds an index buffer to the current VAO for indexed drawing.
+     * 
+     * @param indices Array of indices for drawing the vertices.
+     */
+    private void bindIndicesbuffer(int[] indices) {
+        // Generate a new VBO ID for the index buffer.
+        int vboID = GL15.glGenBuffers();
+        // Store the VBO ID for cleanup purposes.
+        vbos.add(vboID);
+        // Bind the VBO to the element array buffer target.
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboID);
+        // Convert the indices into an IntBuffer.
+        IntBuffer buffer = storeDataInIntBuffer(indices);
+        // Store the buffer data in the VBO with static draw usage.
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+    }
 
-	/**
-	 * Converts an array of floats into a FloatBuffer to be used by OpenGL.
-	 * 
-	 * @param data The float array to be converted into a FloatBuffer.
-	 * @return A FloatBuffer containing the provided data.
-	 */
-	private FloatBuffer storeDataInFloatBuffer(float[] data) {
-		// Create a new FloatBuffer with the same size as the data array.
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);
-		// Put the data into the buffer.
-		buffer.put(data);
-		// Flip the buffer to prepare it for reading.
-		buffer.flip();
+    /**
+     * Converts an array of integers into an IntBuffer to be used by OpenGL.
+     * 
+     * @param data The integer array to be converted into an IntBuffer.
+     * @return An IntBuffer containing the provided data.
+     */
+    IntBuffer storeDataInIntBuffer(int[] data) {
+        // Create a new IntBuffer with the same size as the data array.
+        IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
+        // Put the data into the buffer.
+        buffer.put(data);
+        // Flip the buffer to prepare it for reading.
+        buffer.flip();
 
-		return buffer;
-	}
+        return buffer;
+    }
 
-	/**
-	 * Cleans up the created VAOs, VBOs, and textures by deleting them from OpenGL
-	 * memory. This method should be called when the program is closing to free up
-	 * resources.
-	 */
-	public void cleanUp() {
-		// Delete all VAOs.
-		vaos.forEach(GL30::glDeleteVertexArrays);
+    /**
+     * Converts an array of floats into a FloatBuffer to be used by OpenGL.
+     * 
+     * @param data The float array to be converted into a FloatBuffer.
+     * @return A FloatBuffer containing the provided data.
+     */
+    private FloatBuffer storeDataInFloatBuffer(float[] data) {
+        // Create a new FloatBuffer with the same size as the data array.
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);
+        // Put the data into the buffer.
+        buffer.put(data);
+        // Flip the buffer to prepare it for reading.
+        buffer.flip();
 
-		// Delete all VBOs.
-		vbos.forEach(GL15::glDeleteBuffers);
+        return buffer;
+    }
 
-		// Delete all textures.
-		textures.forEach(GL11::glDeleteTextures);
-	}
+    /**
+     * Cleans up the created VAOs, VBOs, and textures by deleting them from OpenGL
+     * memory. This method should be called when the program is closing to free up
+     * resources.
+     */
+    public void cleanUp() {
+        // Delete all VAOs.
+        vaos.forEach(GL30::glDeleteVertexArrays);
+
+        // Delete all VBOs.
+        vbos.forEach(GL15::glDeleteBuffers);
+
+        // Delete all textures.
+        textures.forEach(GL11::glDeleteTextures);
+    }
 }

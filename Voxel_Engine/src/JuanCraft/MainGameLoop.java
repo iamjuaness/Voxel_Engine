@@ -7,9 +7,13 @@ import java.util.List;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
 
+import chunks.Chunck;
+import chunks.ChunkMesh;
+import cube.Block;
+import cube.Block.TYPE;
 import entities.Camera;
 import entities.Entity;
-import models.AtlasCubeModel;
+import models.CubeModel;
 import models.RawModel;
 import models.TexturedModel;
 import render_engine.DisplayManager;
@@ -61,10 +65,10 @@ public class MainGameLoop {
         MasterRenderer renderer = new MasterRenderer();
 
         // Load the vertices, indices, and UV coordinates into a RawModel.
-        RawModel model = loader.loadToVao(AtlasCubeModel.vertices, AtlasCubeModel.indices, AtlasCubeModel.uv);
+        RawModel model = loader.loadToVao(CubeModel.vertices, CubeModel.indices, CubeModel.uv);
 
         // Load a texture from the specified file and create a Modeltexture object.
-        Modeltexture texture = new Modeltexture(loader.loadTexture("grassTex"));
+        Modeltexture texture = new Modeltexture(loader.loadTexture("dirtTex"));
 
         // Create a TexturedModel object using the loaded texture and the 3D model.
         TexturedModel texturedModel = new TexturedModel(model, texture);
@@ -72,43 +76,33 @@ public class MainGameLoop {
         // Create a Camera object positioned at the origin with no rotation.
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
-        // Create a new thread to manage entities creation in the positive X and Z quadrant.
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // Loop continuously while the display is open.
-                while (!Display.isCloseRequested()) {
-                    // Loop through a 20x20 grid area in the positive X and Z quadrant around the camera.
-                    for (int x = (int) (camPos.x - WORLD_SIZE) / 16; x < (camPos.x + WORLD_SIZE) / 16; x++) {
-                        for (int z = (int) (camPos.z - WORLD_SIZE) / 16; z < (camPos.z + WORLD_SIZE) / 16; z++) {
-                            // Check if the position is already used to avoid duplicate entities.
-                            if (!usedPos.contains(new Vector3f(x * 16, 0, z * 16))) {
-                                
-                                // Create a list of blocks (entities) for the current chunk.
-                                List<Entity> blocks = new ArrayList<Entity>();
-                                
-                                // Loop to create a 16x16 grid of blocks for the current chunk.
-                                for (int i = 0; i < 16; i++) {
-                                    for (int j = 0; j < 16; j++) {
-                                        blocks.add(new Entity(
-                                            texturedModel,
-                                            new Vector3f((x * 16) + i, 0, (z * 16) + j),
-                                            0, 0, 0, 1
-                                        ));
-                                    }
-                                }
-                                
-                                // Add the new chunk to the list of chunks.
-                                chunks.add(new Chunck(blocks, new Vector3f(x * 16, 0, z * 16)));
-                                
-                                // Mark the position as used.
-                                usedPos.add(new Vector3f(x * 16, 0, z * 16));
-                            }
-                        }
-                    }
+        // Create a list to hold block entities for a single chunk.
+        List<Block> blocks = new ArrayList<Block>();
+        
+        // Create a 10x10x10 chunk filled with "dirt" blocks.
+        for (int x = 0; x < 10; x++) {
+            for (int y = 0; y < 10; y++) {
+                for (int z = 0; z < 10; z++) {
+                    // Add a new "dirt" block at each (x, y, z) position.
+                    blocks.add(new Block(x, y, z, TYPE.DIRT));
                 }
             }
-        }).start();
+        }
+        
+        // Create a new chunk at the origin using the generated blocks.
+        Chunck chunck = new Chunck(blocks, new Vector3f(0, 0, 0));
+        
+        // Create the mesh for the chunk.
+        ChunkMesh mesh = new ChunkMesh(chunck);
+        
+        // Load the chunk's mesh data into a RawModel.
+        RawModel model123 = loader.loadToVao(mesh.positions, mesh.uvs);
+        
+        // Create a textured model for the chunk using the loaded texture.
+        TexturedModel texModel = new TexturedModel(model123, texture);
+        
+        // Create an entity for the chunk, to be placed at the origin.
+        Entity entity = new Entity(texModel, new Vector3f(0, 0, 0), 0, 0, 0, 1);
 
         // Main game loop, which runs continuously until the display requests to close.
         while (!Display.isCloseRequested()) {
@@ -119,32 +113,8 @@ public class MainGameLoop {
             // Get the current camera position for entity placement logic.
             camPos = camera.getPosition();
 
-            // Render each chunk if within the specified world size.
-            for (int i = 0; i < chunks.size(); i++) {
-                
-                Vector3f origin = chunks.get(i).getOrigin();
-                
-                // Calculate the distance between the camera and the chunk along the X-axis.
-                int distX = (int) (camPos.x - origin.x);
-                // Calculate the distance between the camera and the chunk along the Z-axis.
-                int distZ = (int) (camPos.z - origin.z);
-
-                // Convert negative distances to positive values.
-                if (distX < 0) {
-                    distX = -distX;
-                }
-
-                if (distZ < 0) {
-                    distZ = -distZ;
-                }
-
-                // If the chunk is within the world size range, render its blocks.
-                if (distX <= WORLD_SIZE && distZ <= WORLD_SIZE) {
-                    for (Entity block : chunks.get(i).getBlocks()) {
-                        renderer.addEntity(block); // Add each block entity to the renderer.
-                    }
-                }
-            }
+            // Render the chunk entity.
+            renderer.addEntity(entity);
             
             // Render the scene with the camera's current view.
             renderer.render(camera);

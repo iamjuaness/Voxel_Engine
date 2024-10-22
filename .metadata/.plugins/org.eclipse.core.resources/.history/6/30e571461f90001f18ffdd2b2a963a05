@@ -1,0 +1,12 @@
+package cube;
+
+public class Cube {
+	
+	public int x, y, z;
+	
+	public static enum TYPE {
+		
+		DIRT, GRASS;
+	}
+
+}

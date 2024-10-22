@@ -1,0 +1,34 @@
+package chunks;
+
+import java.util.List;
+import org.lwjgl.util.vector.Vector3f;
+
+import cube.Block;
+import entities.Entity;
+
+/**
+ * The Chunck class represents a chunk of entities within the game world.
+ * Each chunk is characterized by a list of entities (blocks) and an origin point,
+ * representing its position in the world.
+ */
+public class Chunck {
+
+    // List of entities that make up the blocks within this chunk.
+    private List<Block> blocks;
+
+    // The origin position of the chunk in 3D space (x, y, z).
+    private Vector3f origin;
+
+    /**
+     * Constructs a Chunck with a specified list of blocks and an origin position.
+     *
+     * @param blocks List of Entity objects representing the blocks in the chunk.
+     * @param origin The origin position of the chunk in the game world.
+     */
+    public Chunck(List<Block> blocks, Vector3f origin) {
+        this.setBlocks(blocks); // Set the list of blocks.
+        this.origin = origin; // Set the origin position of the chunk.
+    }
+
+
+}

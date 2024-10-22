@@ -1,0 +1,18 @@
+package chunks;
+
+import java.util.List;
+
+import cube.Vertex;
+
+public class ChunkMesh {
+
+	private List<Vertex> vertices;
+	private List<Float> positionList;
+	private List<Float> uvsList;
+	private List<Float> normalsList;
+	
+	float[] positions, uvs, normals;
+	
+	public Chunck chunck;
+	
+}

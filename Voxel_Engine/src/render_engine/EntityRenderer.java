@@ -21,9 +21,10 @@ import toolbox.Maths; // Utility class for mathematical operations
  * model.
  */
 public class EntityRenderer {
-	
-	static StaticShader shader = new StaticShader(); // Static instance of the shader used for rendering
     
+    // Static instance of the shader used for rendering.
+    static StaticShader shader = new StaticShader();
+
     /**
      * Renders the 3D entities grouped by their textured models.
      * 
@@ -32,10 +33,10 @@ public class EntityRenderer {
      *                 the same texture.
      */
     public void render(Map<TexturedModel, List<Entity>> entities) {
-    	
-    	// Iterate over each textured model in the provided map.
-    	for (TexturedModel model : entities.keySet()) {
-    		
+        
+        // Iterate over each textured model in the provided map.
+        for (TexturedModel model : entities.keySet()) {
+            
             // Bind the VAO (Vertex Array Object) of the model to prepare it for rendering.
             GL30.glBindVertexArray(model.getModel().getVaoID());
 
@@ -56,7 +57,7 @@ public class EntityRenderer {
             
             // Render each entity in the batch.
             for (Entity entity : batch) {
-            	
+                
                 // Create the transformation matrix based on the entity's position, rotation,
                 // and scale, and load it into the shader.
                 Matrix4f transformationMatrix = Maths.createTransformationMatrix(
@@ -68,14 +69,8 @@ public class EntityRenderer {
                 );
                 shader.loadTransformationMatrix(transformationMatrix); // Load the transformation matrix into the shader.
                 
-                // Draw the vertices of the model as triangles. It uses the index buffer for
-                // drawing with the vertex count from the model, starting from index 0.
-                GL11.glDrawElements(
-                    GL11.GL_TRIANGLES, // Drawing mode (triangles)
-                    model.getModel().getVertexCount(), // Number of vertices to draw
-                    GL11.GL_UNSIGNED_INT, // Type of the indices
-                    0 // Offset in the index buffer
-                );            	
+                // Draw the model using the current transformation matrix.
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, model.getModel().getVertexCount());    	
             }
             
             // Disable the vertex attribute array for position data after rendering.
@@ -86,6 +81,6 @@ public class EntityRenderer {
 
             // Unbind the VAO to prevent any unintended modifications.
             GL30.glBindVertexArray(0);
-    	}
+        }
     }
 }

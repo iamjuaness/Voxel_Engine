@@ -1,0 +1,196 @@
+package chunks;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.lwjgl.util.vector.Vector3f;
+
+import cube.Block;
+import cube.Vertex;
+import models.CubeModel;
+
+/**
+ * The ChunkMesh class is responsible for building the mesh of a chunk of blocks in the game world.
+ * It manages the vertices, UV coordinates, and normals for each block face, ensuring only visible faces are added to the mesh.
+ */
+public class ChunkMesh {
+
+    // Lists to store vertex data for the chunk's mesh.
+    private List<Vertex> vertices; // Stores the vertices for the chunk mesh.
+    private List<Float> positionList; // Stores positions of vertices.
+    private List<Float> uvsList; // Stores UV coordinates for textures.
+    private List<Float> normalsList; // Stores normals for lighting calculations.
+
+    // Arrays to hold the final vertex data after it's populated from the lists.
+    public float[] positions, uvs, normals;
+
+    // The chunk that this mesh represents.
+    public Chunck chunck;
+
+    /**
+     * Constructs a ChunkMesh object for a given chunk and builds its mesh.
+     *
+     * @param chunck The chunk to generate the mesh for.
+     */
+    public ChunkMesh(Chunck chunck) {
+        this.chunck = chunck;
+
+        // Initialize vertex lists.
+        vertices = new ArrayList<>();
+        positionList = new ArrayList<>();
+        uvsList = new ArrayList<>();
+        normalsList = new ArrayList<>();
+
+        // Build the mesh for the chunk and populate the vertex data lists.
+        buildMesh();
+        populateLists();
+    }
+
+    /**
+     * Updates the ChunkMesh by rebuilding the mesh for a new or modified chunk.
+     *
+     * @param chunck The new chunk to update the mesh for.
+     */
+    public void update(Chunck chunck) {
+        this.chunck = chunck;
+
+        // Rebuild the mesh and repopulate the vertex data lists.
+        buildMesh();
+        populateLists();
+    }
+
+    /**
+     * Builds the mesh by checking which block faces are visible and adding them to the mesh.
+     * Visible faces are those not adjacent to another block.
+     */
+    private void buildMesh() {
+        // Loop through each block in the chunk.
+        for (int i = 0; i < chunck.getBlocks().size(); i++) {
+            Block blockI = chunck.getBlocks().get(i);
+
+            // Boolean flags to check visibility of each face (positive/negative X, Y, Z).
+            boolean px = false, nx = false, py = false, ny = false, pz = false, nz = false;
+
+            // Check adjacent blocks to determine which faces of the block are visible.
+            for (int j = 0; j < chunck.getBlocks().size(); j++) {
+                Block blockJ = chunck.getBlocks().get(j);
+
+                // Check positive X face.
+                if (((blockI.x + 1) == blockJ.x) && (blockI.y == blockJ.y) && (blockI.z == blockJ.z)) {
+                    px = true;
+                }
+                // Check negative X face.
+                if (((blockI.x - 1) == blockJ.x) && (blockI.y == blockJ.y) && (blockI.z == blockJ.z)) {
+                    nx = true;
+                }
+                // Check positive Y face.
+                if ((blockI.x == blockJ.x) && ((blockI.y + 1) == blockJ.y) && (blockI.z == blockJ.z)) {
+                    py = true;
+                }
+                // Check negative Y face.
+                if ((blockI.x == blockJ.x) && ((blockI.y - 1) == blockJ.y) && (blockI.z == blockJ.z)) {
+                    ny = true;
+                }
+                // Check positive Z face.
+                if ((blockI.x == blockJ.x) && (blockI.y == blockJ.y) && ((blockI.z + 1) == blockJ.z)) {
+                    pz = true;
+                }
+                // Check negative Z face.
+                if ((blockI.x == blockJ.x) && (blockI.y == blockJ.y) && ((blockI.z - 1) == blockJ.z)) {
+                    nz = true;
+                }
+            }
+
+            // Add the block's visible faces to the chunk's mesh.
+
+            // Add positive X face if not adjacent to another block.
+            if (!px) {
+                for (int k = 0; k < 6; k++) {
+                    vertices.add(new Vertex(
+                            new Vector3f(CubeModel.PX_POS[k].x + blockI.x, CubeModel.PX_POS[k].y + blockI.y, CubeModel.PX_POS[k].z + blockI.z),
+                            CubeModel.UV[k], CubeModel.NORMALS[k]));
+                }
+            }
+
+            // Add negative X face.
+            if (!nx) {
+                for (int k = 0; k < 6; k++) {
+                    vertices.add(new Vertex(
+                            new Vector3f(CubeModel.NX_POS[k].x + blockI.x, CubeModel.NX_POS[k].y + blockI.y, CubeModel.NX_POS[k].z + blockI.z),
+                            CubeModel.UV[k], CubeModel.NORMALS[k]));
+                }
+            }
+
+            // Add positive Y face.
+            if (!py) {
+                for (int k = 0; k < 6; k++) {
+                    vertices.add(new Vertex(
+                            new Vector3f(CubeModel.PY_POS[k].x + blockI.x, CubeModel.PY_POS[k].y + blockI.y, CubeModel.PY_POS[k].z + blockI.z),
+                            CubeModel.UV[k], CubeModel.NORMALS[k]));
+                }
+            }
+
+            // Add negative Y face.
+            if (!ny) {
+                for (int k = 0; k < 6; k++) {
+                    vertices.add(new Vertex(
+                            new Vector3f(CubeModel.NY_POS[k].x + blockI.x, CubeModel.NY_POS[k].y + blockI.y, CubeModel.NY_POS[k].z + blockI.z),
+                            CubeModel.UV[k], CubeModel.NORMALS[k]));
+                }
+            }
+
+            // Add positive Z face.
+            if (!pz) {
+                for (int k = 0; k < 6; k++) {
+                    vertices.add(new Vertex(
+                            new Vector3f(CubeModel.PZ_POS[k].x + blockI.x, CubeModel.PZ_POS[k].y + blockI.y, CubeModel.PZ_POS[k].z + blockI.z),
+                            CubeModel.UV[k], CubeModel.NORMALS[k]));
+                }
+            }
+
+            // Add negative Z face.
+            if (!nz) {
+                for (int k = 0; k < 6; k++) {
+                    vertices.add(new Vertex(
+                            new Vector3f(CubeModel.NZ_POS[k].x + blockI.x, CubeModel.NZ_POS[k].y + blockI.y, CubeModel.NZ_POS[k].z + blockI.z),
+                            CubeModel.UV[k], CubeModel.NORMALS[k]));
+                }
+            }
+        }
+    }
+
+    /**
+     * Populates the position, UV, and normal lists from the vertices.
+     */
+    private void populateLists() {
+        for (int i = 0; i < vertices.size(); i++) {
+            positionList.add(vertices.get(i).positions.x);
+            positionList.add(vertices.get(i).positions.y);
+            positionList.add(vertices.get(i).positions.z);
+
+            uvsList.add(vertices.get(i).uvs.x);
+            uvsList.add(vertices.get(i).uvs.y);
+
+            normalsList.add(vertices.get(i).normals.x);
+            normalsList.add(vertices.get(i).normals.y);
+            normalsList.add(vertices.get(i).normals.z);
+        }
+
+        // Convert lists to arrays.
+        positions = new float[positionList.size()];
+        uvs = new float[uvsList.size()];
+        normals = new float[normalsList.size()];
+
+        for (int i = 0; i < positionList.size(); i++) {
+            positions[i] = positionList.get(i);
+        }
+
+        for (int i = 0; i < uvsList.size(); i++) {
+            uvs[i] = uvsList.get(i);
+        }
+
+        for (int i = 0; i < normalsList.size(); i++) {
+            normals[i] = normalsList.get(i);
+        }
+    }
+}

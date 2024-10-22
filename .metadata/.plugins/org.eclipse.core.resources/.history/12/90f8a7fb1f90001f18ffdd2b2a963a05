@@ -1,0 +1,25 @@
+package cube;
+
+public class Block {
+    
+    // Public member variables representing the position of the cube in a 3D grid.
+    public int x, y, z;  // The X, Y, Z coordinates of the cube in a 3D space.
+
+    // Enum to define different types of cubes. It currently includes two types: DIRT and GRASS.
+    public static enum TYPE {
+        DIRT,  // Represents a cube made of dirt.
+        GRASS  // Represents a cube made of grass.
+    }
+
+    // The type of the cube (can be DIRT or GRASS).
+    public TYPE type;
+
+    // Constructor for the Block class.
+    // It initializes a Block object with specified X, Y, Z coordinates and a type (DIRT or GRASS).
+    public Block(int x, int y, int z, TYPE type) {
+        this.x = x;      // Set the X coordinate
+        this.y = y;      // Set the Y coordinate
+        this.z = z;      // Set the Z coordinate
+        this.type = type; // Set the type of the cube (DIRT or GRASS)
+    }
+}
