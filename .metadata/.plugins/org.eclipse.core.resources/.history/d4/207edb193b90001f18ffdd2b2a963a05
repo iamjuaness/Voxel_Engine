@@ -1,0 +1,75 @@
+package toolbox;
+
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+
+public class Pointer {
+    private static float size = 10.0f;
+    private static float[] color = {1.0f, 1.0f, 1.0f}; // Color RGB
+    
+    public static void renderPointer() {
+        // Guardar estados de OpenGL que vamos a modificar
+        boolean depthTest = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        boolean lighting = GL11.glGetBoolean(GL11.GL_LIGHTING);
+        boolean texture2D = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+        
+        // Guardar matrices actuales
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        
+        // Configurar estado para renderizado 2D
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        
+        // Configurar vista ortográfica
+        GL11.glOrtho(0.0f, Display.getWidth(), Display.getHeight(), 0.0f, -1.0f, 1.0f);
+        
+        try {
+            // Dibujar el puntero
+            GL11.glColor3f(color[0], color[1], color[2]);
+            GL11.glBegin(GL11.GL_LINES);
+            
+            float centerX = Display.getWidth() / 2.0f;
+            float centerY = Display.getHeight() / 2.0f;
+            
+            // Línea horizontal
+            GL11.glVertex2f(centerX - size, centerY);
+            GL11.glVertex2f(centerX + size, centerY);
+            
+            // Línea vertical
+            GL11.glVertex2f(centerX, centerY - size);
+            GL11.glVertex2f(centerX, centerY + size);
+            
+            GL11.glEnd();
+            
+        } finally {
+            // Restaurar matrices
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPopMatrix();
+            
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+            
+            // Restaurar estados de OpenGL
+            if (depthTest) GL11.glEnable(GL11.GL_DEPTH_TEST);
+            if (lighting) GL11.glEnable(GL11.GL_LIGHTING);
+            if (texture2D) GL11.glEnable(GL11.GL_TEXTURE_2D);
+        }
+    }
+    
+    public static void setSize(float newSize) {
+        size = newSize;
+    }
+    
+    public static void setColor(float r, float g, float b) {
+        color[0] = r;
+        color[1] = g;
+        color[2] = b;
+    }
+}

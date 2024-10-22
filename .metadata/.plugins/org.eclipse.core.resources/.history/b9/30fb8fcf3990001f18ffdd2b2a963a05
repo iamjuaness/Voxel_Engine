@@ -1,0 +1,36 @@
+package toolbox;
+
+import org.lwjgl.opengl.GL11;
+
+public class Pointer {
+
+	
+    public void renderPointer(float x, float y) {
+        // Cambiar a modo 2D
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1); // Establecer coordenadas ortogonales
+
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glLoadIdentity(); // Restablecer transformaciones
+
+        // Dibuja la cruz
+        GL11.glPushMatrix(); // Asegúrate de que la matriz está en modo de modelo
+        GL11.glTranslatef(x, y, 0); // Mover la cruz al centro de la pantalla
+        GL11.glColor3f(1.0f, 0.0f, 0.0f); // Establecer el color de la cruz (rojo)
+        
+        GL11.glBegin(GL11.GL_LINES);
+        
+        // Cruz horizontal
+        GL11.glVertex2f(-10, 0);
+        GL11.glVertex2f(10, 0);
+        
+        // Cruz vertical
+        GL11.glVertex2f(0, -10);
+        GL11.glVertex2f(0, 10);
+        
+        GL11.glEnd();
+        GL11.glPopMatrix();
+    }
+    
+}

@@ -40,11 +40,16 @@ public class Camera {
     /**
      * Updates the camera's position and rotation based on user input.
      * The W and S keys (or UP and DOWN arrows) move the camera forward and backward.
+     * The A and D keys move the camera left and right.
+     * The SPACE key moves the camera upward.
+     * The LEFT SHIFT key moves the camera downward.
      * The mouse movement updates the camera's rotation.
      */
     public void move() {
-        // Variable to control movement direction
+        // Variables to control movement direction
         float moveAt = 0;
+        float strafeAt = 0;
+        float verticalMove = 0; // New variable for vertical movement
 
         // Move the camera forward when W or UP key is pressed.
         if (Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_UP)) {
@@ -55,20 +60,39 @@ public class Camera {
             moveAt = speed; // Move backward in the positive Z direction.
         }
 
+        // Move the camera left when A key is pressed.
+        if (Keyboard.isKeyDown(Keyboard.KEY_A) || Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+            strafeAt = -speed; // Move left in the negative X direction.
+        }
+        // Move the camera right when D key is pressed.
+        else if (Keyboard.isKeyDown(Keyboard.KEY_D) || Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+            strafeAt = speed; // Move right in the positive X direction.
+        }
+
+        // Move the camera upward when SPACE key is pressed.
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            verticalMove = speed; // Move up in the positive Y direction.
+        }
+        // Move the camera downward when LEFT SHIFT key is pressed.
+        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+            verticalMove = -speed; // Move down in the negative Y direction.
+        }
+
         // Update rotation based on mouse movement.
         rotX += -Mouse.getDY() * turnSpeed; // Adjust rotation around X based on vertical mouse movement.
         rotY += Mouse.getDX() * turnSpeed;  // Adjust rotation around Y based on horizontal mouse movement.
 
         // Calculate directional movement based on rotation angles
-        float dx = (float) -(moveAt * Math.sin(Math.toRadians(rotY)));
-        float dy = (float) (moveAt * Math.sin(Math.toRadians(rotX)));
-        float dz = (float) (moveAt * Math.cos(Math.toRadians(rotY)));
+        float dx = (float) -(moveAt * Math.sin(Math.toRadians(rotY))) + (float) (strafeAt * Math.cos(Math.toRadians(rotY)));
+        float dy = verticalMove; // Use the verticalMove variable for up/down movement
+        float dz = (float) (moveAt * Math.cos(Math.toRadians(rotY))) + (float) (strafeAt * Math.sin(Math.toRadians(rotY)));
 
         // Update the camera's position
         position.x += dx;
-        position.y += dy;
+        position.y += dy; // Update the Y position
         position.z += dz;
     }
+
 
     /**
      * Gets the current position of the camera.
@@ -104,5 +128,17 @@ public class Camera {
      */
     public float getRotZ() {
         return rotZ;
+    }
+
+    /**
+     * Gets a direction vector indicating where the camera is looking.
+     * 
+     * @return A Vector3f representing the forward direction the camera is facing.
+     */
+    public Vector3f getDirection() {
+        float dirX = (float) -(Math.sin(Math.toRadians(rotY)));
+        float dirY = (float) -(Math.sin(Math.toRadians(rotX)));
+        float dirZ = (float) -(Math.cos(Math.toRadians(rotY)));
+        return new Vector3f(dirX, dirY, dirZ);
     }
 }

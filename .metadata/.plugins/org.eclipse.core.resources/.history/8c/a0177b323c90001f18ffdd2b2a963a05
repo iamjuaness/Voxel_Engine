@@ -1,0 +1,135 @@
+package entities;
+
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
+
+public class Pointer {
+    private static float size = 1.0f;
+    private static float[] color = {1.0f, 1.0f, 1.0f}; // Color RGB
+    
+    private static int vaoID;
+    private static int vboID;
+    private static int shaderProgram;
+    
+    static {
+        initPointer();
+    }
+    
+    private static void initPointer() {
+        // Crear y vincular VAO
+        vaoID = GL30.glGenVertexArrays();
+        GL30.glBindVertexArray(vaoID);
+        
+        // Crear VBO con las coordenadas de la cruz
+        float[] vertices = {
+            -1.0f, 0.0f,  // Línea horizontal izquierda
+             1.0f, 0.0f,  // Línea horizontal derecha
+             0.0f, -1.0f, // Línea vertical abajo
+             0.0f, 1.0f   // Línea vertical arriba
+        };
+        
+        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertices.length);
+        vertexBuffer.put(vertices);
+        vertexBuffer.flip();
+        
+        vboID = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 0, 0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        
+        GL30.glBindVertexArray(0);
+        
+        // Crear shaders
+        int vertexShader = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
+        GL20.glShaderSource(vertexShader,
+            "attribute vec2 position;\n" +
+            "uniform vec2 screenSize;\n" +
+            "uniform float pointerSize;\n" +
+            "void main() {\n" +
+            "    vec2 pos = position * pointerSize;\n" +
+            "    pos += vec2(screenSize.x/2, screenSize.y/2);\n" +
+            "    vec2 clipSpace = (pos / screenSize) * 2.0 - 1.0;\n" +
+            "    clipSpace.y = -clipSpace.y;\n" +
+            "    gl_Position = vec4(clipSpace, 0.0, 1.0);\n" +
+            "}"
+        );
+        GL20.glCompileShader(vertexShader);
+        
+        int fragmentShader = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
+        GL20.glShaderSource(fragmentShader,
+            "uniform vec3 pointerColor;\n" +
+            "void main() {\n" +
+            "    gl_FragColor = vec4(pointerColor, 1.0);\n" +
+            "}"
+        );
+        GL20.glCompileShader(fragmentShader);
+        
+        // Crear y vincular programa shader
+        shaderProgram = GL20.glCreateProgram();
+        GL20.glAttachShader(shaderProgram, vertexShader);
+        GL20.glAttachShader(shaderProgram, fragmentShader);
+        GL20.glLinkProgram(shaderProgram);
+        
+        // Limpiar shaders
+        GL20.glDeleteShader(vertexShader);
+        GL20.glDeleteShader(fragmentShader);
+    }
+    
+    public static void renderPointer() {
+        // Guardar estado
+        boolean depthTest = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        
+        // Deshabilitar prueba de profundidad
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        
+        // Usar programa shader
+        GL20.glUseProgram(shaderProgram);
+        
+        // Establecer uniforms
+        int screenSizeLoc = GL20.glGetUniformLocation(shaderProgram, "screenSize");
+        GL20.glUniform2f(screenSizeLoc, Display.getWidth(), Display.getHeight());
+        
+        int pointerSizeLoc = GL20.glGetUniformLocation(shaderProgram, "pointerSize");
+        GL20.glUniform1f(pointerSizeLoc, size);
+        
+        int colorLoc = GL20.glGetUniformLocation(shaderProgram, "pointerColor");
+        GL20.glUniform3f(colorLoc, color[0], color[1], color[2]);
+        
+        // Renderizar la cruz
+        GL30.glBindVertexArray(vaoID);
+        GL20.glEnableVertexAttribArray(0);
+        
+        GL11.glDrawArrays(GL11.GL_LINES, 0, 4);
+        
+        // Limpiar estado
+        GL20.glDisableVertexAttribArray(0);
+        GL30.glBindVertexArray(0);
+        GL20.glUseProgram(0);
+        
+        // Restaurar estado
+        if (depthTest) GL11.glEnable(GL11.GL_DEPTH_TEST);
+    }
+    
+    public static void cleanup() {
+        GL20.glDeleteProgram(shaderProgram);
+        GL15.glDeleteBuffers(vboID);
+        GL30.glDeleteVertexArrays(vaoID);
+    }
+    
+    public static void setSize(float newSize) {
+        size = newSize;
+    }
+    
+    public static void setColor(float r, float g, float b) {
+        color[0] = r;
+        color[1] = g;
+        color[2] = b;
+    }
+}

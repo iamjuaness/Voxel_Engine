@@ -12,6 +12,7 @@ import chunks.ChunkMesh;
 import cube.Block;
 import entities.Camera;
 import entities.Entity;
+import entities.Pointer;
 import models.CubeModel;
 import models.RawModel;
 import models.TexturedModel;
@@ -53,7 +54,8 @@ public class MainGameLoop {
      * 
      * @param args Command line arguments (not used in this application).
      */
-    public static void main(String[] args) {
+    @SuppressWarnings("unused")
+	public static void main(String[] args) {
         // Create and initialize the display window for the game.
         DisplayManager.createDisplay();
 
@@ -62,6 +64,9 @@ public class MainGameLoop {
         loader1 = loader; // Store the loader instance for potential future use.
         StaticShader shader = new StaticShader();
         shader1 = shader; // Store the shader instance for potential future use.
+        
+        Pointer.setSize(20.0f);
+        Pointer.setColor(1.0f, 0.0f, 0.0f); // Red
 
         // Instantiate the MasterRenderer to handle rendering operations.
         MasterRenderer renderer = new MasterRenderer();
@@ -101,7 +106,7 @@ public class MainGameLoop {
                                     for (int j = 0; j < 32; j++) {
                                         // Generate the height for the block using Perlin noise.
                                         // The height is calculated based on the current chunk position and the noise generator.
-                                        blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), j + (z * 32)), j, Block.STONE));
+                                        blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), j + (z * 32)), j, Block.GRASS));
                                     }
                                 }
                                 
@@ -118,6 +123,12 @@ public class MainGameLoop {
                             }
                         }
                     }
+                }
+                
+                try {
+                    Thread.sleep(100); // Sleep for a short period to prevent tight loop
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore interrupted status
                 }
             }
         }).start();
@@ -169,10 +180,15 @@ public class MainGameLoop {
 
             // Render the scene with the camera's current view.
             renderer.render(camera);
+            
+            // Render the pointer
+            Pointer.renderPointer();
 
             // Update the display (sync frame rate and render new frame).
             DisplayManager.updateDisplay();
         }
+        
+        Pointer.cleanup();
 
         // Close the display and clean up resources when the loop exits.
         DisplayManager.closeDisplay();

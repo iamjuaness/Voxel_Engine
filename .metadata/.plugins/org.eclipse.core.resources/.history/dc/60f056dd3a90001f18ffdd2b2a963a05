@@ -1,0 +1,86 @@
+package toolbox;
+
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+
+public class Pointer {
+    // Configuración del puntero
+    private static float size = 10.0f;        // Tamaño de la cruz
+    private static float thickness = 2.0f;    // Grosor de las líneas
+    private static float[] color = {1.0f, 1.0f, 1.0f, 1.0f}; // Color (RGBA)
+    
+    /**
+     * Renderiza el puntero en el centro de la pantalla
+     */
+    public static void renderPointer() {
+        renderPointer(Display.getWidth() / 2.0f, Display.getHeight() / 2.0f);
+    }
+
+    /**
+     * Renderiza el puntero en una posición específica
+     * @param x Posición X en la pantalla
+     * @param y Posición Y en la pantalla
+     */
+    public static void renderPointer(float x, float y) {
+        // Guardar el estado actual de la matriz
+        GL11.glPushMatrix();
+        
+        // Configurar para renderizado 2D
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1);
+        
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glLoadIdentity();
+        
+        // Guardar estados actuales
+        boolean depthTest = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        boolean texture2D = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+        
+        // Configurar estado para el puntero
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        
+        // Establecer el grosor de línea
+        GL11.glLineWidth(thickness);
+        
+        // Establecer el color del puntero
+        GL11.glColor4f(color[0], color[1], color[2], color[3]);
+        
+        // Dibujar la cruz
+        GL11.glBegin(GL11.GL_LINES);
+        
+        // Línea horizontal
+        GL11.glVertex2f(x - size, y);
+        GL11.glVertex2f(x + size, y);
+        
+        // Línea vertical
+        GL11.glVertex2f(x, y - size);
+        GL11.glVertex2f(x, y + size);
+        
+        GL11.glEnd();
+        
+        // Restaurar estados
+        if (depthTest) GL11.glEnable(GL11.GL_DEPTH_TEST);
+        if (texture2D) GL11.glEnable(GL11.GL_TEXTURE_2D);
+        
+        // Restaurar matriz
+        GL11.glPopMatrix();
+    }
+    
+    // Métodos para personalizar el puntero
+    public static void setSize(float newSize) {
+        size = newSize;
+    }
+    
+    public static void setThickness(float newThickness) {
+        thickness = newThickness;
+    }
+    
+    public static void setColor(float r, float g, float b, float a) {
+        color[0] = r;
+        color[1] = g;
+        color[2] = b;
+        color[3] = a;
+    }
+}
