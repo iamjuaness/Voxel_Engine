@@ -15,5 +15,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/cardo/Downloads/LWJGL3 + Assets/LWJGL3 + Assets/lwjgl-2.9.1/jar/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="C:/Users/cardo/Downloads/slick.jar/slick.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

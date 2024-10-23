@@ -1,0 +1,15 @@
+package entities;
+
+import org.lwjgl.util.vector.Vector3f;
+
+import render_engine.DebugInfoRenderer;
+
+public class Screen { 
+    
+	private static DebugInfoRenderer debug = new DebugInfoRenderer();
+	
+	public static void debugRenderer(Vector3f camPos, int fps) {
+		debug.renderDebugInfo(camPos, fps);
+	}
+
+}

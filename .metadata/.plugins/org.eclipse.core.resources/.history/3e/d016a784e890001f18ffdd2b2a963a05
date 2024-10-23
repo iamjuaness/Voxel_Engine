@@ -1,0 +1,17 @@
+#version 400 core
+
+in vec2 pass_textureCoords;
+
+uniform sampler2D textureSampler;
+
+uniform sampler2D fontAtlas;
+uniform vec3 color;
+uniform float alpha;
+
+out vec4 out_Colour;
+
+void main(void) {
+	float textAlpha = texture(fontAtlas, pass_texCoords).a;
+    out_Color = vec4(color, alpha * textAlpha);
+    
+}

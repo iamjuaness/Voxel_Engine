@@ -1,0 +1,74 @@
+package entities;
+
+import org.lwjgl.util.vector.Vector2f;
+import org.lwjgl.util.vector.Vector3f;
+
+public class Text {
+    private String textString;
+    private float fontSize;
+    private Vector2f position;
+    private Vector3f color;
+    private float alpha;
+    private int textMeshVao;
+    private int vertexCount;
+    private int fontAtlas;
+    
+    // Constructor matching your usage
+    public Text(String text, float fontSize, Vector2f position, Vector3f color, float alpha) {
+        this.textString = text;
+        this.fontSize = fontSize;
+        this.position = position;
+        this.color = color;
+        this.alpha = alpha;
+        
+        // These will need to be set after mesh generation
+        this.textMeshVao = 0;
+        this.vertexCount = 0;
+        this.fontAtlas = 0;
+    }
+    
+    // Getters and setters
+    public String getText() {
+        return textString;
+    }
+    
+    public float getFontSize() {
+        return fontSize;
+    }
+    
+    public Vector2f getPosition() {
+        return position;
+    }
+    
+    public Vector3f getColor() {
+        return color;
+    }
+    
+    public float getAlpha() {
+        return alpha;
+    }
+    
+    public int getMesh() {
+        return textMeshVao;
+    }
+    
+    public void setMesh(int vaoID) {
+        this.textMeshVao = vaoID;
+    }
+    
+    public int getVertexCount() {
+        return vertexCount;
+    }
+    
+    public void setVertexCount(int count) {
+        this.vertexCount = count;
+    }
+    
+    public int getFontAtlas() {
+        return fontAtlas;
+    }
+    
+    public void setFontAtlas(int atlasID) {
+        this.fontAtlas = atlasID;
+    }
+}

@@ -1,0 +1,93 @@
+package toolbox;
+
+import org.lwjgl.Sys;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.util.vector.Vector3f;
+
+import entities.Camera;
+import render_engine.Loader;
+import render_engine.MasterRenderer;
+import models.RawModel;
+import models.TexturedModel;
+import textures.Modeltexture;
+import entities.Entity;
+
+public class DebugInfo {
+    private static long lastFrameTime;
+    private static float fps;
+    private static Runtime runtime;
+    private static TexturedModel textModel;
+    
+    public static void initialize(Loader loader) {
+        lastFrameTime = getCurrentTime();
+        runtime = Runtime.getRuntime();
+        
+        // Crear un modelo simple para renderizar el texto (un quad)
+        float[] vertices = {
+            -1, 1, 0,   // V0
+            -1, -1, 0,  // V1
+            1, -1, 0,   // V2
+            1, 1, 0     // V3
+        };
+        
+        int[] indices = {
+            0, 1, 3,  // Primer triángulo
+            3, 1, 2   // Segundo triángulo
+        };
+        
+        float[] textureCoords = {
+            0, 0,  // V0
+            0, 1,  // V1
+            1, 1,  // V2
+            1, 0   // V3
+        };
+        
+        RawModel model = loader.loadToVao(vertices, indices, textureCoords);
+        Modeltexture texture = new Modeltexture(loader.loadTexture("white"));
+        textModel = new TexturedModel(model, texture);
+    }
+    
+    private static long getCurrentTime() {
+        return Sys.getTime() * 1000 / Sys.getTimerResolution();
+    }
+    
+    public static void updateFPS() {
+        long currentFrameTime = getCurrentTime();
+        fps = 1000.0f / (currentFrameTime - lastFrameTime);
+        lastFrameTime = currentFrameTime;
+    }
+    
+    public static String getDebugInfo(Camera camera) {
+        Vector3f position = camera.getPosition();
+        long totalMemory = runtime.totalMemory() / 1024 / 1024;
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024;
+        
+        return String.format(
+            "FPS: %.1f\n" +
+            "XYZ: %.2f / %.2f / %.2f\n" +
+            "Memory: %dMB / %dMB\n" +
+            "Display: %dx%d\n" +
+            "Java: %s",
+            fps,
+            position.x, position.y, position.z,
+            usedMemory, totalMemory,
+            Display.getWidth(), Display.getHeight(),
+            System.getProperty("java.version")
+        );
+    }
+    
+    public static void addDebugInfoToRenderer(MasterRenderer renderer, Camera camera, boolean show) {
+        if (!show || textModel == null) return;
+        
+        String[] lines = getDebugInfo(camera).split("\n");
+        float yOffset = 0.9f;
+        
+        for (String line : lines) {
+            Entity textEntity = new Entity(textModel, new Vector3f(-0.9f, yOffset, -1), 0, 0, 0, 0.05f);
+            renderer.addEntity(textEntity);
+            yOffset -= 0.1f;
+            
+            System.out.println("Renderizando...");
+        }
+    }
+}

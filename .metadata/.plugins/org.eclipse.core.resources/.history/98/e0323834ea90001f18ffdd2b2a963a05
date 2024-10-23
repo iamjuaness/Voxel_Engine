@@ -1,0 +1,115 @@
+package toolbox;
+
+import org.lwjgl.Sys;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.opengl.GL11;
+
+import entities.Camera;
+
+public class DebugInfo {
+    private static long lastFrameTime;
+    private static float fps;
+    private static Runtime runtime;
+    
+    static {
+        lastFrameTime = getCurrentTime();
+        runtime = Runtime.getRuntime();
+    }
+    
+    private static long getCurrentTime() {
+        return Sys.getTime() * 1000 / Sys.getTimerResolution();
+    }
+    
+    public static void updateFPS() {
+        long currentFrameTime = getCurrentTime();
+        fps = 1000.0f / (currentFrameTime - lastFrameTime);
+        lastFrameTime = currentFrameTime;
+    }
+    
+    public static void renderDebugInfo(Camera camera, boolean show) {
+        if (!show) return;
+        
+        // Store the current transformation matrix
+        GL11.glPushMatrix();
+        
+        // Set up orthographic projection for 2D rendering
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glLoadIdentity();
+        
+        // Disable depth testing and texturing
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        
+        // Get camera position
+        Vector3f position = camera.getPosition();
+        
+        // Calculate memory usage
+        long totalMemory = runtime.totalMemory() / 1024 / 1024;
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024;
+        
+        // Prepare debug information strings
+        String[] debugInfo = {
+            String.format("FPS: %.1f", fps),
+            String.format("XYZ: %.2f / %.2f / %.2f", position.x, position.y, position.z),
+            String.format("Memory: %dMB / %dMB", usedMemory, totalMemory),
+            String.format("Display: %dx%d", Display.getWidth(), Display.getHeight()),
+            String.format("Java: %s", System.getProperty("java.version"))
+        };
+        
+        // Render debug information
+        int y = 10;
+        for (String info : debugInfo) {
+            renderText(10, y, info);
+            y += 15;
+        }
+        
+        // Restore previous settings
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        
+        // Restore the previous transformation matrix
+        GL11.glPopMatrix();
+        
+        // Reset the projection matrix for 3D rendering
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        float aspectRatio = (float) Display.getWidth() / (float) Display.getHeight();
+        float fov = 70;
+        float nearPlane = 0.1f;
+        float farPlane = 1000f;
+        float y_scale = (float) (1f / Math.tan(Math.toRadians(fov / 2f)));
+        float x_scale = y_scale / aspectRatio;
+        float frustum_length = farPlane - nearPlane;
+        
+        GL11.glLoadIdentity();
+        GL11.glFrustum(-nearPlane * x_scale, nearPlane * x_scale,
+                       -nearPlane * y_scale, nearPlane * y_scale,
+                       nearPlane, farPlane);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+    }
+    
+    private static void renderText(int x, int y, String text) {
+        // Simple rectangle-based character rendering
+        GL11.glColor3f(1.0f, 1.0f, 1.0f);  // White color
+        
+        int charWidth = 8;
+        int charHeight = 12;
+        
+        for (int i = 0; i < text.length(); i++) {
+            // Draw a simple rectangle for each character
+            GL11.glBegin(GL11.GL_QUADS);
+            GL11.glVertex2f(x + (i * charWidth), y);
+            GL11.glVertex2f(x + (i * charWidth) + charWidth, y);
+            GL11.glVertex2f(x + (i * charWidth) + charWidth, y + charHeight);
+            GL11.glVertex2f(x + (i * charWidth), y + charHeight);
+            GL11.glEnd();
+            
+            // Add a small gap between characters
+            x += 1;
+        }
+    }
+}

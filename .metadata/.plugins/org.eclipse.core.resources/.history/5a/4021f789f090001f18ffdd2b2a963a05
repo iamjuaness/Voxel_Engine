@@ -1,0 +1,132 @@
+package fisics;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.lwjgl.util.vector.Vector3f;
+import entities.Camera;
+import cube.Block;
+import chunks.Chunk;
+import chunks.ChunkMesh;
+
+public class CollisionHandler {
+    private static final float PLAYER_HEIGHT = 2.0f;
+    private static final float PLAYER_WIDTH = 0.8f;
+    private static final float COLLISION_MARGIN = 0.1f;
+
+    public static boolean checkCollision(Camera camera, List<ChunkMesh> chunks) {
+        Vector3f position = camera.getPosition();
+        
+        // Obtener la posición del chunk actual
+        int chunkX = (int) Math.floor(position.x / 32);
+        int chunkZ = (int) Math.floor(position.z / 32);
+        
+        // Crear una copia segura de la lista de chunks para iterar
+        List<ChunkMesh> chunksCopy;
+        synchronized(chunks) {
+            chunksCopy = new ArrayList<>(chunks);
+        }
+        
+        // Verificar colisiones solo con los chunks cercanos
+        for (ChunkMesh chunkMesh : chunksCopy) {
+            if (chunkMesh == null || chunkMesh.chunck == null) continue;
+            
+            Chunk chunk = chunkMesh.chunck;
+            Vector3f chunkOrigin = chunk.getOrigin();
+            
+            // Solo verificar chunks adyacentes
+            if (Math.abs(chunkOrigin.x/32 - chunkX) <= 1 && Math.abs(chunkOrigin.z/32 - chunkZ) <= 1) {
+                if (checkChunkCollision(position, chunk)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    private static boolean checkChunkCollision(Vector3f position, Chunk chunk) {
+        if (chunk == null || chunk.getBlocks() == null) return false;
+        
+        List<Block> blocks = chunk.getBlocks();
+        Vector3f chunkOrigin = chunk.getOrigin();
+        
+        // Crear una copia segura de la lista de bloques
+        List<Block> blocksCopy;
+        synchronized(blocks) {
+            blocksCopy = new ArrayList<>(blocks);
+        }
+        
+        // Obtener los bloques cercanos a la posición del jugador
+        for (Block block : blocksCopy) {
+            if (block != null) {
+                // Posición absoluta del bloque
+                float blockX = chunkOrigin.x + block.getX();
+                float blockY = block.getY();
+                float blockZ = chunkOrigin.z + block.getZ();
+                
+                // Verificar si el jugador está cerca del bloque
+                if (Math.abs(position.x - blockX) < 2 && 
+                    Math.abs(position.y - blockY) < 3 && 
+                    Math.abs(position.z - blockZ) < 2) {
+                    
+                    // Verificar colisión con el bloque usando una caja de colisión más precisa
+                    if (position.x + PLAYER_WIDTH/2 > blockX - 0.5f && 
+                        position.x - PLAYER_WIDTH/2 < blockX + 0.5f &&
+                        position.y < blockY + 1.0f && 
+                        position.y + PLAYER_HEIGHT > blockY &&
+                        position.z + PLAYER_WIDTH/2 > blockZ - 0.5f && 
+                        position.z - PLAYER_WIDTH/2 < blockZ + 0.5f) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    public static void handleCollision(Camera camera, Vector3f oldPosition, List<ChunkMesh> chunks) {
+        Vector3f currentPos = camera.getPosition();
+        Vector3f newPosition = new Vector3f(currentPos);
+        boolean collisionX = false, collisionY = false, collisionZ = false;
+        
+        // Probar movimiento en X
+        newPosition.x = currentPos.x;
+        camera.setPosition(newPosition);
+        if (checkCollision(camera, chunks)) {
+            collisionX = true; // Marca la colisión en el eje X
+        } else {
+            oldPosition.x = currentPos.x; // Permite el movimiento en X
+        }
+        
+        // Probar movimiento en Y
+        newPosition.y = currentPos.y;
+        camera.setPosition(newPosition);
+        if (checkCollision(camera, chunks)) {
+            collisionY = true; // Marca la colisión en el eje Y
+        } else {
+            oldPosition.y = currentPos.y; // Permite el movimiento en Y
+        }
+        
+        // Probar movimiento en Z
+        newPosition.z = currentPos.z;
+        camera.setPosition(newPosition);
+        if (checkCollision(camera, chunks)) {
+            collisionZ = true; // Marca la colisión en el eje Z
+        } else {
+            oldPosition.z = currentPos.z; // Permite el movimiento en Z
+        }
+
+        // Ajustar posición en caso de colisión
+        if (collisionX) {
+            currentPos.x = oldPosition.x; // Bloquea el movimiento en X
+        }
+        if (collisionY) {
+            currentPos.y = oldPosition.y; // Bloquea el movimiento en Y
+        }
+        if (collisionZ) {
+            currentPos.z = oldPosition.z; // Bloquea el movimiento en Z
+        }
+
+        // Aplicar la posición final
+        camera.setPosition(currentPos);
+    }
+}

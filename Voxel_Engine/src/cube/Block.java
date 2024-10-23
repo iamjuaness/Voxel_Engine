@@ -36,4 +36,22 @@ public class Block {
         this.z = z;      // Set the Z coordinate of the Block.
         this.type = type; // Set the type of the Block (e.g., DIRT, GRASS).
     }
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public int getZ() {
+		return z;
+	}
+
+	public int getType() {
+		return type;
+	}
+    
+    
 }

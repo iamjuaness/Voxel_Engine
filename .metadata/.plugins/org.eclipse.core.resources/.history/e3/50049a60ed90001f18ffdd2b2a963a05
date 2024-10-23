@@ -1,0 +1,37 @@
+//package entities;
+//
+//import org.lwjgl.util.vector.Vector3f;
+//import render_engine.DebugInfoRenderer;
+//import render_engine.Loader;
+//
+//public class Screen {
+//    private static DebugInfoRenderer debug;
+//    
+//    public static void init(Loader loader) {
+//        debug = new DebugInfoRenderer(loader);
+//    }
+//    
+//    public static void update() {
+//        if (debug != null) {
+//            debug.checkDebugToggle();
+//            debug.updateFpsCounter();
+//        }
+//    }
+//    
+//    public static void renderDebugInfo(Vector3f camPos) {
+//        if (debug != null) {
+//            debug.renderDebugInfo(camPos);
+//        }
+//    }
+//    
+//    public static void cleanup() {
+//        if (debug != null) {
+//            debug.cleanup();
+//            debug = null;
+//        }
+//    }
+//    
+//    public static boolean isDebugEnabled() {
+//        return debug != null && debug.isDebugEnabled();
+//    }
+//}

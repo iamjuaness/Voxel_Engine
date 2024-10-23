@@ -1,0 +1,62 @@
+package toolbox;
+
+import org.lwjgl.Sys;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.util.vector.Vector3f;
+
+import entities.Camera;
+import render_engine.Loader;
+
+public class DebugInfo {
+    private static long lastFrameTime;
+    private static float fps;
+    private static Runtime runtime;
+    private static TextRender textRenderer;
+    
+    public static void initialize(Loader loader) {
+        lastFrameTime = getCurrentTime();
+        runtime = Runtime.getRuntime();
+        textRenderer = new TextRenderer(loader);
+    }
+    
+    private static long getCurrentTime() {
+        return Sys.getTime() * 1000 / Sys.getTimerResolution();
+    }
+    
+    public static void updateFPS() {
+        long currentFrameTime = getCurrentTime();
+        fps = 1000.0f / (currentFrameTime - lastFrameTime);
+        lastFrameTime = currentFrameTime;
+    }
+    
+    public static String getDebugInfo(Camera camera) {
+        Vector3f position = camera.getPosition();
+        long totalMemory = runtime.totalMemory() / 1024 / 1024;
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024;
+        
+        return String.format(
+            "FPS: %.1f\n" +
+            "XYZ: %.2f / %.2f / %.2f\n" +
+            "Memory: %dMB / %dMB\n" +
+            "Display: %dx%d\n" +
+            "Java: %s",
+            fps,
+            position.x, position.y, position.z,
+            usedMemory, totalMemory,
+            Display.getWidth(), Display.getHeight(),
+            System.getProperty("java.version")
+        );
+    }
+    
+    public static void renderDebugInfo(Camera camera, boolean show) {
+        if (!show || textRenderer == null) return;
+        
+        String[] lines = getDebugInfo(camera).split("\n");
+        float yPosition = Display.getHeight() - 20;
+        
+        for (String line : lines) {
+            textRenderer.renderText(line, 10, yPosition, 1.0f);
+            yPosition -= 20;
+        }
+    }
+}

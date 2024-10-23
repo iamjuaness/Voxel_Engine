@@ -1,0 +1,94 @@
+package render_engine;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.TrueTypeFont;
+import java.awt.Font;
+
+public class DebugInfoRenderer {
+    private TrueTypeFont font;
+    private boolean wasF3Pressed = false;
+    private boolean showDebugInfo = false;
+    private long lastFpsUpdate = 0;
+    private int frameCount = 0;
+    private int currentFps = 0;
+    
+    public DebugInfoRenderer() {
+        // Anti-aliased font for better readability
+        Font awtFont = new Font("Arial", Font.PLAIN, 16);
+        font = new TrueTypeFont(awtFont, true);
+    }
+    
+    public void updateFpsCounter() {
+        frameCount++;
+        
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastFpsUpdate > 1000) { // Update every second
+            currentFps = frameCount;
+            frameCount = 0;
+            lastFpsUpdate = currentTime;
+        }
+    }
+    
+    public void checkDebugToggle() {
+        boolean isF3Down = Keyboard.isKeyDown(Keyboard.KEY_F3);
+        
+        // Toggle only on press, not hold
+        if (isF3Down && !wasF3Pressed) {
+            showDebugInfo = !showDebugInfo;
+        }
+        wasF3Pressed = isF3Down;
+    }
+    
+    public boolean isDebugEnabled() {
+        return showDebugInfo;
+    }
+    
+    public void renderDebugInfo(Vector3f cameraPosition) {
+        if (!showDebugInfo) return;
+        
+        // Save current OpenGL state
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glPushMatrix();
+        
+        // Setup for 2D rendering
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glLoadIdentity();
+        
+        // Render debug information
+        int yOffset = 10;
+        int xOffset = 10;
+        
+        // FPS Counter
+        font.drawString(xOffset, yOffset, "FPS: " + currentFps, Color.yellow);
+        yOffset += 20;
+        
+        // Camera Position (formatted to 2 decimal places)
+        font.drawString(xOffset, yOffset, String.format("Position: %.2f, %.2f, %.2f",
+            cameraPosition.x, cameraPosition.y, cameraPosition.z), Color.yellow);
+        yOffset += 20;
+        
+        // Memory Usage
+        long usedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024;
+        long totalMemory = Runtime.getRuntime().totalMemory() / 1024 / 1024;
+        font.drawString(xOffset, yOffset, String.format("Memory: %dMB / %dMB", usedMemory, totalMemory), Color.yellow);
+        
+        // Restore OpenGL state
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
+    }
+    
+    public void cleanup() {
+        if (font != null) {
+            font = null;
+        }
+    }
+}

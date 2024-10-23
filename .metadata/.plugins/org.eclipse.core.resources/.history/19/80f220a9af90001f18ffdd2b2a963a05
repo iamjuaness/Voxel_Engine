@@ -1,0 +1,96 @@
+package render_engine;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.TrueTypeFont;
+import java.awt.Font;
+
+public class DebugInfoRenderer {
+    private TrueTypeFont font;
+    private boolean wasF3Pressed = false;
+    private boolean showDebugInfo = false;
+    private long lastFpsUpdate = 0;
+    private int frameCount = 0;
+    private int currentFps = 0;
+    
+    public DebugInfoRenderer() {
+        try {
+            // Anti-aliased font for better readability
+            Font awtFont = new Font("Arial", Font.PLAIN, 16);
+            font = new TrueTypeFont(awtFont, true);
+        } catch (Exception e) {
+            System.err.println("Error creating font: " + e.getMessage());
+        }
+    }
+    
+    public void updateFpsCounter() {
+        frameCount++;
+        
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastFpsUpdate > 1000) {
+            currentFps = frameCount;
+            frameCount = 0;
+            lastFpsUpdate = currentTime;
+        }
+    }
+    
+    public void checkDebugToggle() {
+        boolean isF3Down = Keyboard.isKeyDown(Keyboard.KEY_F3);
+        
+        if (isF3Down && !wasF3Pressed) {
+            showDebugInfo = !showDebugInfo;
+        }
+        wasF3Pressed = isF3Down;
+    }
+    
+    public boolean isDebugEnabled() {
+        return showDebugInfo;
+    }
+    
+    public void renderDebugInfo(Vector3f cameraPosition) {
+        if (!showDebugInfo || font == null) return;
+        
+        // Guardar estados de OpenGL
+        boolean depthEnabled = GL11.glGetBoolean(GL11.GL_DEPTH_TEST);
+        boolean textureEnabled = GL11.glGetBoolean(GL11.GL_TEXTURE_2D);
+        
+        // Configurar OpenGL para renderizado 2D
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        
+        try {
+            // Render debug information
+            int yOffset = 10;
+            int xOffset = 10;
+            
+            // FPS Counter
+            font.drawString(xOffset, yOffset, "FPS: " + currentFps, Color.yellow);
+            yOffset += 20;
+            
+            // Camera Position
+            font.drawString(xOffset, yOffset, String.format("Position: %.2f, %.2f, %.2f",
+                cameraPosition.x, cameraPosition.y, cameraPosition.z), Color.yellow);
+            yOffset += 20;
+            
+            // Memory Usage
+            long usedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024;
+            long totalMemory = Runtime.getRuntime().totalMemory() / 1024 / 1024;
+            font.drawString(xOffset, yOffset, String.format("Memory: %dMB / %dMB", usedMemory, totalMemory), Color.yellow);
+        } catch (Exception e) {
+            System.err.println("Error rendering debug info: " + e.getMessage());
+        }
+        
+        // Restaurar estados de OpenGL
+        if (depthEnabled) GL11.glEnable(GL11.GL_DEPTH_TEST);
+        if (textureEnabled) GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+    }
+    
+    public void cleanup() {
+        font = null;
+    }
+}

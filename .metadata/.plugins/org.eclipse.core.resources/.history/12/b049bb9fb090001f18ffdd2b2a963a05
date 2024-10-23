@@ -1,0 +1,70 @@
+public class Text {
+    private int textMeshVao;
+    private int vertexCount;
+    private int fontAtlas;
+    private Vector3f color = new Vector3f(0, 0, 0);
+    private Vector3f position;
+    private float fontSize;
+    private float lineMaxSize;
+    private int numberOfLines;
+    
+    public Text(String text, float fontSize, int fontAtlas, int textMeshVao, int vertexCount, Vector3f position) {
+        this.textMeshVao = textMeshVao;
+        this.vertexCount = vertexCount;
+        this.fontAtlas = fontAtlas;
+        this.fontSize = fontSize;
+        this.position = position;
+    }
+    
+    public int getMesh() {
+        return textMeshVao;
+    }
+    
+    public int getVertexCount() {
+        return vertexCount;
+    }
+    
+    public int getFontAtlas() {
+        return fontAtlas;
+    }
+    
+    public Vector3f getColor() {
+        return color;
+    }
+    
+    public void setColor(Vector3f color) {
+        this.color = color;
+    }
+    
+    public Vector3f getPosition() {
+        return position;
+    }
+    
+    public void setPosition(Vector3f position) {
+        this.position = position;
+    }
+    
+    public float getFontSize() {
+        return fontSize;
+    }
+    
+    public void setFontSize(float fontSize) {
+        this.fontSize = fontSize;
+    }
+    
+    public float getLineMaxSize() {
+        return lineMaxSize;
+    }
+    
+    public void setLineMaxSize(float lineMaxSize) {
+        this.lineMaxSize = lineMaxSize;
+    }
+    
+    public int getNumberOfLines() {
+        return numberOfLines;
+    }
+    
+    public void setNumberOfLines(int numberOfLines) {
+        this.numberOfLines = numberOfLines;
+    }
+}

@@ -1,0 +1,83 @@
+package render_engine;
+
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.util.vector.Vector2f;
+import org.lwjgl.util.vector.Vector3f;
+
+import render_engine.Loader;
+
+public class TextRender {
+    private static final int FONT_TEXTURE_SIZE = 512;
+    private static final int CHAR_SIZE = 32;
+    private static final int NUM_CHARS = 256;
+    
+    private int vaoID;
+    private int textureID;
+    private int vertexCount;
+    
+    public TextRender(Loader loader) {
+        // Crear un VAO para el texto
+        float[] positions = new float[] {
+            0, 0, 0,
+            0, CHAR_SIZE, 0,
+            CHAR_SIZE, CHAR_SIZE, 0,
+            CHAR_SIZE, 0, 0
+        };
+        
+        float[] textureCoords = new float[] {
+            0, 0,
+            0, 1,
+            1, 1,
+            1, 0
+        };
+        
+        int[] indices = new int[] {
+            0, 1, 2,
+            2, 3, 0
+        };
+        
+        vaoID = loader.createVAO();
+        loader.storeDataInAttributeList(positions, 0, 3);
+        loader.storeDataInAttributeList(textureCoords, 1, 2);
+        loader.bindIndicesbuffer(indices);
+        vertexCount = indices.length;
+        
+        // Cargar textura de fuente
+        textureID = loader.loadTexture("resources/white");
+    }
+    
+    public void renderText(String text, float x, float y, float scale) {
+        GL30.glBindVertexArray(vaoID);
+        GL20.glEnableVertexAttribArray(0);
+        GL20.glEnableVertexAttribArray(1);
+        
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        
+        float currentX = x;
+        for (char c : text.toCharArray()) {
+            // Calcular coordenadas de textura para el carácter
+            float texX = (c % 16) / 16.0f;
+            float texY = (c / 16) / 16.0f;
+            
+            // Matriz de transformación
+            GL11.glPushMatrix();
+            GL11.glTranslatef(currentX, y, 0);
+            GL11.glScalef(scale, scale, 1);
+            
+            // Renderizar carácter
+            GL11.glDrawElements(GL11.GL_TRIANGLES, vertexCount, GL11.GL_UNSIGNED_INT, 0);
+            
+            GL11.glPopMatrix();
+            
+            currentX += CHAR_SIZE * scale;
+        }
+        
+        GL20.glDisableVertexAttribArray(0);
+        GL20.glDisableVertexAttribArray(1);
+        GL30.glBindVertexArray(0);
+    }
+}

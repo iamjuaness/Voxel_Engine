@@ -1,0 +1,11 @@
+package entities;
+
+import org.lwjgl.util.vector.Vector3f;
+
+import render_engine.DebugInfoRenderer;
+
+public class Screen { 
+    
+	DebugInfoRenderer debug = new DebugInfoRenderer();
+
+}

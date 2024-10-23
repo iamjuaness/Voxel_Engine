@@ -4,6 +4,9 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector3f;
 
+import fisics.CollisionHandler;
+import juancraft.MainGameLoop;
+
 /**
  * The Camera class represents a camera in a 3D space, allowing for movement and rotation based on user input.
  * It uses keyboard input for forward and backward movement and mouse input for rotation.
@@ -46,6 +49,9 @@ public class Camera {
      * The mouse movement updates the camera's rotation.
      */
     public void move() {
+    	// Save old position
+    	Vector3f oldPosition = new Vector3f(position);
+    	
         // Variables to control movement direction
         float moveAt = 0;
         float strafeAt = 0;
@@ -91,6 +97,10 @@ public class Camera {
         position.x += dx;
         position.y += dy; // Update the Y position
         position.z += dz;
+        
+        // Detect Collision
+        CollisionHandler.handleCollision(this, oldPosition, MainGameLoop.chunks);
+        
     }
 
 
@@ -103,7 +113,11 @@ public class Camera {
         return position;
     }
 
-    /**
+    public void setPosition(Vector3f position) {
+		this.position = position;
+	}
+
+	/**
      * Gets the current rotation around the X axis.
      * 
      * @return The rotation angle around the X axis.

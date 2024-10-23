@@ -1,0 +1,33 @@
+package render_engine;
+
+import org.newdawn.slick.TrueTypeFont;
+import java.awt.Font;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
+
+public class DebugInfoRenderer {
+
+    private TrueTypeFont font;
+
+    public DebugInfoRenderer() {
+        // Crea una fuente TrueType y luego la envuelve en un TrueTypeFont de Slick2D
+        Font awtFont = new Font("Times New Roman", Font.PLAIN, 24);
+        font = new TrueTypeFont(awtFont, false);
+    }
+
+    /**
+     * Dibuja texto en la pantalla usando OpenGL.
+     * 
+     * @param cameraPosition La posición actual de la cámara.
+     * @param fps            El número de FPS actuales.
+     */
+    public void renderDebugInfo(Vector3f cameraPosition, int fps) {
+        GL11.glDisable(GL11.GL_DEPTH_TEST); // Desactiva el test de profundidad para que el texto no se oculte
+        font.drawString(10, 10, "FPS: " + fps); // Muestra los FPS en la esquina superior izquierda
+        font.drawString(10, 40, "Camera Position: " + 
+            cameraPosition.x + ", " + 
+            cameraPosition.y + ", " + 
+            cameraPosition.z); // Muestra las coordenadas de la cámara
+        GL11.glEnable(GL11.GL_DEPTH_TEST); // Reactiva el test de profundidad
+    }
+}

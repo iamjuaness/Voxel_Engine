@@ -1,0 +1,18 @@
+package entities;
+
+import render_engine.DebugInfoRenderer;
+
+public class Screen {
+	
+    private static DebugInfoRenderer debugRenderer = new DebugInfoRenderer();
+    private boolean showDebugInfo = false;
+    
+    
+	public Screen(boolean showDebugInfo) {
+		super();
+		this.showDebugInfo = showDebugInfo;
+	}
+    
+    
+
+}

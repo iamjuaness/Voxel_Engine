@@ -3,8 +3,12 @@ package juancraft;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 import chunks.Chunk;
@@ -35,10 +39,10 @@ public class MainGameLoop {
     public static StaticShader shader1 = null; // Shader instance for rendering
     
     // List of chunks to be rendered in the game world.
-    static List<ChunkMesh> chunks = Collections.synchronizedList(new ArrayList<ChunkMesh>());
+    public static List<ChunkMesh> chunks = new CopyOnWriteArrayList<>();
     
     // Vector representing the position of the camera.
-    static Vector3f camPos = new Vector3f(0, 0, 0);
+    static Vector3f camPos = new Vector3f(0, 1000, 0);
     
     // List of positions that have been used for placing entities to avoid duplication.
     static List<Vector3f> usedPos = new ArrayList<Vector3f>();
@@ -65,6 +69,8 @@ public class MainGameLoop {
         StaticShader shader = new StaticShader();
         shader1 = shader; // Store the shader instance for potential future use.
         
+        Random random = new Random();
+        
         Pointer.setSize(20.0f);
         Pointer.setColor(1.0f, 0.0f, 0.0f); // Red
 
@@ -84,7 +90,7 @@ public class MainGameLoop {
         Camera camera = new Camera(new Vector3f(0, 0, 0), 0, 0, 0);
         
         // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
-        PerlinNoiseGenerator generator = new PerlinNoiseGenerator();
+        PerlinNoiseGenerator generator = new PerlinNoiseGenerator(random.nextInt(10), random.nextInt(10), random.nextInt(100), random.nextInt(50));
 
         // Create a new thread to manage entity creation in the positive X and Z quadrant.
         new Thread(new Runnable() {
@@ -135,6 +141,7 @@ public class MainGameLoop {
         
         // Main game loop, which runs continuously until the display requests to close.
         int index = 0; // Index for tracking chunks to be loaded
+        boolean showDebugInfo = false;
         while (!Display.isCloseRequested()) {
             
             // Update camera position based on user input.
@@ -177,13 +184,16 @@ public class MainGameLoop {
                     renderer.addEntity(entities.get(i)); // Add entity for rendering
                 }
             }
+            
+            // Limpiar el frame buffer
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
             // Render the scene with the camera's current view.
             renderer.render(camera);
             
             // Render the pointer
             Pointer.renderPointer();
-
+            
             // Update the display (sync frame rate and render new frame).
             DisplayManager.updateDisplay();
         }

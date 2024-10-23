@@ -1,0 +1,135 @@
+package toolbox;
+
+import java.util.Random;
+
+/**
+ * The PerlinNoiseGenerator class generates Perlin noise for height maps used in terrain generation.
+ * This class uses a series of octaves to create a smoother, more natural-looking noise.
+ */
+public class PerlinNoiseGenerator {
+
+    // Constants for controlling the noise generation
+  	public static float AMPLITUDE = 80f; // Maximum height deviation
+    public static int OCTAVES = 21; // Number of noise layers (octaves)
+    public static float ROUGHNESS = 0.3f; // Controls the roughness of the terrain
+
+    private Random random = new Random(); // Random number generator for noise
+    private int seed; // Seed for the random number generator
+    private int xOffset = 0; // X offset for noise generation
+    private int zOffset = 0; // Z offset for noise generation
+
+    /**
+     * Default constructor initializes the generator with a seed of 0.
+     */
+    public PerlinNoiseGenerator() {
+        this.seed = 0;
+    }
+     
+    /**
+     * Constructor that initializes the generator with specific offsets and a seed.
+     * 
+     * @param gridX The grid X position for noise generation.
+     * @param gridZ The grid Z position for noise generation.
+     * @param vertexCount The number of vertices per grid, used for offset calculations.
+     * @param seed The seed for the random number generator.
+     */
+    public PerlinNoiseGenerator(int gridX, int gridZ, int vertexCount, int seed) {
+        this.seed = seed;
+        xOffset = gridX * (vertexCount - 1); // Calculate the X offset
+        zOffset = gridZ * (vertexCount - 1); // Calculate the Z offset
+    }
+
+    /**
+     * Generates the height at the specified coordinates using Perlin noise.
+     * 
+     * @param x The x coordinate for which to generate height.
+     * @param z The z coordinate for which to generate height.
+     * @return The generated height at the specified coordinates.
+     */
+    public float generateHeight(int x, int z) {
+        // Ensure coordinates are non-negative
+    	x = x < 0 ? -x : x;
+    	z = z < 0 ? -z : z;
+    	
+        float total = 0; // Accumulator for the total height
+        float d = (float) Math.pow(2, OCTAVES - 1); // Normalization factor for frequency
+        for (int i = 0; i < OCTAVES; i++) {
+            // Calculate frequency and amplitude for the current octave
+            float freq = (float) (Math.pow(2, i) / d);
+            float amp = (float) Math.pow(ROUGHNESS, i) * AMPLITUDE;
+            // Accumulate height contributions from the noise
+            total += getInterpolatedNoise((x + xOffset) * freq, (z + zOffset) * freq) * amp;
+        }
+        
+        // Return the total height as an integer
+        return (float) (int) total;
+    }
+     
+    /**
+     * Retrieves interpolated noise based on the specified coordinates.
+     * 
+     * @param x The x coordinate for noise retrieval.
+     * @param z The z coordinate for noise retrieval.
+     * @return The interpolated noise value.
+     */
+    private float getInterpolatedNoise(float x, float z) {
+        int intX = (int) x; // Integer part of the x coordinate
+        int intZ = (int) z; // Integer part of the z coordinate
+        float fracX = x - intX; // Fractional part of the x coordinate
+        float fracZ = z - intZ; // Fractional part of the z coordinate
+         
+        // Retrieve the smooth noise values for the surrounding points
+        float v1 = getSmoothNoise(intX, intZ);
+        float v2 = getSmoothNoise(intX + 1, intZ);
+        float v3 = getSmoothNoise(intX, intZ + 1);
+        float v4 = getSmoothNoise(intX + 1, intZ + 1);
+        
+        // Interpolate between the noise values
+        float i1 = interpolate(v1, v2, fracX);
+        float i2 = interpolate(v3, v4, fracX);
+        return interpolate(i1, i2, fracZ);
+    }
+     
+    /**
+     * Linearly interpolates between two values based on the blend factor.
+     * 
+     * @param a The first value.
+     * @param b The second value.
+     * @param blend The blend factor (0 to 1).
+     * @return The interpolated value.
+     */
+    private float interpolate(float a, float b, float blend) {
+        double theta = blend * Math.PI; // Convert blend to radians
+        float f = (float)(1f - Math.cos(theta)) * 0.5f; // Smooth interpolation factor
+        return a * (1f - f) + b * f; // Interpolate
+    }
+ 
+    /**
+     * Computes smooth noise based on surrounding points to reduce abrupt changes.
+     * 
+     * @param x The x coordinate for noise retrieval.
+     * @param z The z coordinate for noise retrieval.
+     * @return The smoothed noise value.
+     */
+    private float getSmoothNoise(int x, int z) {
+        float corners = (getNoise(x - 1, z - 1) + getNoise(x + 1, z - 1) + 
+                         getNoise(x - 1, z + 1) + getNoise(x + 1, z + 1)) / 16f; // Averaged corners
+        float sides = (getNoise(x - 1, z) + getNoise(x + 1, z) + 
+                       getNoise(x, z - 1) + getNoise(x, z + 1)) / 8f; // Averaged sides
+        float center = getNoise(x, z) / 4f; // Center value
+        return corners + sides + center; // Combine all parts
+    }
+ 
+    /**
+     * Generates noise based on x and z coordinates using a random seed.
+     * 
+     * @param x The x coordinate for noise generation.
+     * @param z The z coordinate for noise generation.
+     * @return A noise value in the range [-1, 1].
+     */
+    private float getNoise(int x, int z) {
+        // Set seed based on x, z coordinates and the generator's seed
+        random.setSeed(x * 49632 + z * 325176 + seed);
+        return random.nextFloat() * 2f - 1f; // Generate noise in the range [-1, 1]
+    }
+}

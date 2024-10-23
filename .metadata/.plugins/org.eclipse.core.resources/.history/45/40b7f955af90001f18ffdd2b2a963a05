@@ -1,0 +1,75 @@
+package shaders;
+
+package render_engine;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TextMaster {
+    private static Loader loader;
+    private static List<Text> texts = new ArrayList<>();
+    private static TextShader shader;
+    
+    public static void init(Loader theLoader) {
+        loader = theLoader;
+        shader = new TextShader();
+    }
+    
+    public static void render() {
+        shader.start();
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        
+        for (Text text : texts) {
+            GL30.glBindVertexArray(text.getMesh());
+            GL20.glEnableVertexAttribArray(0);
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, text.getFontAtlas());
+            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, text.getVertexCount());
+            GL20.glDisableVertexAttribArray(0);
+            GL30.glBindVertexArray(0);
+        }
+        
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        shader.stop();
+    }
+    
+    public static void cleanUp() {
+        shader.cleanUp();
+    }
+}
+
+class TextShader extends ShaderProgram {
+    private static final String VERTEX_FILE = "/Shaders/textVertex.txt";
+    private static final String FRAGMENT_FILE = "/Shaders/textFragment.txt";
+    
+    private int location_color;
+    private int location_translation;
+    
+    public TextShader() {
+        super(VERTEX_FILE, FRAGMENT_FILE);
+    }
+    
+    @Override
+    protected void getAllUniformLocations() {
+        location_color = super.getUniformLocation("color");
+        location_translation = super.getUniformLocation("translation");
+    }
+    
+    @Override
+    protected void bindAttributes() {
+        super.bindAttribute(0, "position");
+        super.bindAttribute(1, "textureCoords");
+    }
+}

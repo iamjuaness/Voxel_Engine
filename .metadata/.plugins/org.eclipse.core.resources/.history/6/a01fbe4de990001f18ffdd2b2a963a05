@@ -1,0 +1,115 @@
+package toolbox;
+
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+
+import org.lwjgl.Sys;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.opengl.GL11;
+
+import entities.Camera;
+
+public class DebugInfo {
+    private static long lastFrameTime;
+    private static float fps;
+    private static Runtime runtime;
+    
+    static {
+        lastFrameTime = getCurrentTime();
+        runtime = Runtime.getRuntime();
+    }
+    
+    private static long getCurrentTime() {
+        return Sys.getTime() * 1000 / Sys.getTimerResolution();
+    }
+    
+    public static void updateFPS() {
+        long currentFrameTime = getCurrentTime();
+        fps = 1000.0f / (currentFrameTime - lastFrameTime);
+        lastFrameTime = currentFrameTime;
+    }
+    
+    public static void renderDebugInfo(Camera camera, boolean show) {
+        if (!show) return;
+        
+        // Save the current matrix mode and other states
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        
+        // Disable depth testing temporarily
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        
+        // Get camera position
+        Vector3f position = camera.getPosition();
+        
+        // Calculate memory usage
+        long totalMemory = runtime.totalMemory() / 1024 / 1024;
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024;
+        
+        // Prepare debug information strings
+        String[] debugInfo = {
+            String.format("FPS: %.1f", fps),
+            String.format("XYZ: %.2f / %.2f / %.2f", position.x, position.y, position.z),
+            String.format("Memory: %dMB / %dMB", usedMemory, totalMemory),
+            String.format("Display: %dx%d", Display.getWidth(), Display.getHeight()),
+            String.format("Java: %s", System.getProperty("java.version"))
+        };
+        
+        // Render debug information
+        int y = 10;
+        for (String info : debugInfo) {
+            renderString(10, y, info);
+            y += 20;
+        }
+        
+        // Restore the previous matrix mode and states
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
+    }
+    
+    private static void renderString(int x, int y, String text) {
+        // Save current color
+        float[] currentColor = new float[4];
+        
+        FloatBuffer buffer = FloatBuffer.wrap(currentColor);
+        
+        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, buffer);
+        
+        // Set white color for text
+        GL11.glColor3f(1.0f, 1.0f, 1.0f);
+        
+        // Enable blending for anti-aliasing
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        
+        // Render the text
+        GL11.glRasterPos2i(x, y);
+        for (char c : text.toCharArray()) {
+            GL11.glBitmap(8, 13, 0, 0, 10, 0, DEFAULT_FONT[c]);
+        }
+        
+        // Restore previous color
+        GL11.glColor4f(currentColor[0], currentColor[1], currentColor[2], currentColor[3]);
+    }
+    
+    // Simple bitmap font (you might want to replace this with a proper font rendering system)
+    private static final ByteBuffer DEFAULT_FONT = new byte[128][13];
+    static {
+        // Initialize with basic font data (this is a simplified version)
+        // In a real implementation, you'd want to use a proper font rendering system
+        // This is just a placeholder to make the code compile
+        for (int i = 0; i < 128; i++) {
+            DEFAULT_FONT[i] = new byte[13];
+        }
+    }
+}

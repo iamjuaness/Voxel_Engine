@@ -1,0 +1,135 @@
+package entities;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.util.vector.Vector3f;
+
+import fisics.CollisionHandler;
+import juancraft.MainGameLoop;
+
+/**
+ * The Camera class represents a camera in a 3D space, allowing for movement and rotation based on user input.
+ * It uses keyboard input for forward and backward movement and mouse input for rotation.
+ */
+public class Camera {
+
+    // The position of the camera in 3D space.
+    private Vector3f position;
+    
+    // Rotation angles for the camera around the X, Y, and Z axes.
+    private float rotX, rotY, rotZ;
+    
+    // Speed at which the camera moves.
+    private float speed = 1f;
+    
+    // Speed at which the camera rotates.
+    private float turnSpeed = 0.1f;
+
+    /**
+     * Constructor to create a Camera instance.
+     * 
+     * @param position The initial position of the camera in 3D space.
+     * @param rotX The initial rotation angle around the X axis.
+     * @param rotY The initial rotation angle around the Y axis.
+     * @param rotZ The initial rotation angle around the Z axis (not used in this implementation).
+     */
+    public Camera(Vector3f position, float rotX, float rotY, float rotZ) {
+        this.position = position;
+        this.rotX = rotX;
+        this.rotY = rotY;
+        this.rotZ = rotZ;
+    }
+
+    /**
+     * Updates the camera's position and rotation based on user input.
+     * The W and S keys (or UP and DOWN arrows) move the camera forward and backward.
+     * The A and D keys move the camera left and right.
+     * The SPACE key moves the camera upward.
+     * The LEFT SHIFT key moves the camera downward.
+     * The mouse movement updates the camera's rotation.
+     */
+    public void move() {
+        // Guardar la posición anterior
+        Vector3f oldPosition = new Vector3f(position);
+        
+        // Movimiento actual
+        if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
+            position.x -= (float) Math.sin(Math.toRadians(yaw)) * 0.2f;
+            position.z += (float) Math.cos(Math.toRadians(yaw)) * 0.2f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
+            position.x += (float) Math.sin(Math.toRadians(yaw)) * 0.2f;
+            position.z -= (float) Math.cos(Math.toRadians(yaw)) * 0.2f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_D)) {
+            position.x += (float) Math.sin(Math.toRadians(yaw - 90)) * 0.2f;
+            position.z -= (float) Math.cos(Math.toRadians(yaw - 90)) * 0.2f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
+            position.x += (float) Math.sin(Math.toRadians(yaw + 90)) * 0.2f;
+            position.z -= (float) Math.cos(Math.toRadians(yaw + 90)) * 0.2f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            position.y += 0.2f;
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+            position.y -= 0.2f;
+        }
+        
+        // Verificar y manejar colisiones
+        CollisionHandler.handleCollision(this, oldPosition, MainGameLoop.chunks);
+    }
+
+
+    /**
+     * Gets the current position of the camera.
+     * 
+     * @return The position of the camera as a Vector3f.
+     */
+    public Vector3f getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector3f position) {
+		this.position = position;
+	}
+
+	/**
+     * Gets the current rotation around the X axis.
+     * 
+     * @return The rotation angle around the X axis.
+     */
+    public float getRotX() {
+        return rotX;
+    }
+
+    /**
+     * Gets the current rotation around the Y axis.
+     * 
+     * @return The rotation angle around the Y axis.
+     */
+    public float getRotY() {
+        return rotY;
+    }
+
+    /**
+     * Gets the current rotation around the Z axis.
+     * 
+     * @return The rotation angle around the Z axis (not used in this implementation).
+     */
+    public float getRotZ() {
+        return rotZ;
+    }
+
+    /**
+     * Gets a direction vector indicating where the camera is looking.
+     * 
+     * @return A Vector3f representing the forward direction the camera is facing.
+     */
+    public Vector3f getDirection() {
+        float dirX = (float) -(Math.sin(Math.toRadians(rotY)));
+        float dirY = (float) -(Math.sin(Math.toRadians(rotX)));
+        float dirZ = (float) -(Math.cos(Math.toRadians(rotY)));
+        return new Vector3f(dirX, dirY, dirZ);
+    }
+}

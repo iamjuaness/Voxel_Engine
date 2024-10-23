@@ -1,0 +1,92 @@
+package render_engine;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import entities.Text;
+import models.RawModel;
+
+public class TextRenderer {
+    private static final int CHAR_SIZE = 16; // Size of characters in the font texture
+    private static final float CHAR_WIDTH = 1.0f / 16.0f; // Width of each character in UV coordinates
+    private static final float CHAR_HEIGHT = 1.0f / 16.0f; // Height of each character in UV coordinates
+    
+    private Loader loader;
+    private int fontAtlas;
+    
+    public TextRenderer(Loader loader, int fontAtlasTexture) {
+        this.loader = loader;
+        this.fontAtlas = fontAtlasTexture;
+    }
+    
+    public void loadText(Text text) {
+        String textString = text.getText();
+        float fontSize = text.getFontSize();
+        
+        List<Float> vertices = new ArrayList<>();
+        List<Float> uvCoords = new ArrayList<>();
+        List<Integer> indices = new ArrayList<>();
+        
+        float cursorX = 0f;
+        int characterIndex = 0;
+        
+        for (char c : textString.toCharArray()) {
+            // Calculate character position in font texture
+            int ascii = (int) c;
+            float u = (ascii % 16) * CHAR_WIDTH;
+            float v = (ascii / 16) * CHAR_HEIGHT;
+            
+            // Calculate vertex positions
+            float x = cursorX;
+            float y = 0;
+            float width = fontSize;
+            float height = fontSize;
+            
+            // Add vertices for character quad (4 vertices per character)
+            vertices.add(x);          vertices.add(y);          vertices.add(0.0f); // Bottom left
+            vertices.add(x);          vertices.add(y + height); vertices.add(0.0f); // Top left
+            vertices.add(x + width);  vertices.add(y + height); vertices.add(0.0f); // Top right
+            vertices.add(x + width);  vertices.add(y);          vertices.add(0.0f); // Bottom right
+            
+            // Add texture coordinates
+            uvCoords.add(u);              uvCoords.add(v);                  // Bottom left
+            uvCoords.add(u);              uvCoords.add(v + CHAR_HEIGHT);    // Top left
+            uvCoords.add(u + CHAR_WIDTH); uvCoords.add(v + CHAR_HEIGHT);    // Top right
+            uvCoords.add(u + CHAR_WIDTH); uvCoords.add(v);                  // Bottom right
+            
+            // Add indices for character quad (6 indices per character)
+            indices.add(4 * characterIndex);     // First triangle
+            indices.add(4 * characterIndex + 1);
+            indices.add(4 * characterIndex + 2);
+            indices.add(4 * characterIndex + 2); // Second triangle
+            indices.add(4 * characterIndex + 3);
+            indices.add(4 * characterIndex);
+            
+            cursorX += width * 0.8f; // Add spacing between characters
+            characterIndex++;
+        }
+        
+        // Convert Lists to arrays
+        float[] verticesArray = new float[vertices.size()];
+        float[] uvArray = new float[uvCoords.size()];
+        int[] indicesArray = new int[indices.size()];
+        
+        for (int i = 0; i < vertices.size(); i++) {
+            verticesArray[i] = vertices.get(i);
+        }
+        
+        for (int i = 0; i < uvCoords.size(); i++) {
+            uvArray[i] = uvCoords.get(i);
+        }
+        
+        for (int i = 0; i < indices.size(); i++) {
+            indicesArray[i] = indices.get(i);
+        }
+        
+        // Create the mesh using your loader
+        RawModel model = loader.loadToVao(verticesArray, indicesArray, uvArray);
+        text.setMesh(model.getVaoID());
+        text.setVertexCount(indicesArray.length);
+        text.setFontAtlas(fontAtlas);
+    }
+}
