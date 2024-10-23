@@ -1,0 +1,172 @@
+package chunks;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import org.lwjgl.util.vector.Vector3f;
+import cube.Block;
+import juancraft.MainGameLoop;
+import toolbox.PerlinNoiseGenerator;
+
+/**
+ * The Chunck class represents a chunk of entities within the game world.
+ * Each chunk is characterized by a list of entities (blocks) and an origin point,
+ * representing its position in the world.
+ */
+public class Chunk {
+
+    // List of blocks that make up this chunk.
+    private List<Block> blocks;
+
+    // The origin position of the chunk in 3D space, defined by a Vector3f (x, y, z).
+    private Vector3f origin;
+    
+    static Random random = new Random();
+    
+    // Create an instance of the PerlinNoiseGenerator to generate heights based on noise.
+    static PerlinNoiseGenerator generator = new PerlinNoiseGenerator(random.nextInt(10), random.nextInt(10), random.nextInt(100), random.nextInt(50));
+
+    private static boolean isChunkAtCameraReady = false;
+
+    /**
+     * Constructs a Chunck with a specified list of blocks and an origin position.
+     *
+     * @param blocks List of Block objects representing the blocks in the chunk.
+     * @param origin The origin position of the chunk in the game world.
+     */
+    public Chunk(List<Block> blocks, Vector3f origin) {
+        this.blocks = blocks; // Initialize the list of blocks in this chunk.
+        this.origin = origin; // Set the origin position of the chunk in the world.
+    }
+
+	public List<Block> getBlocks() {
+		return blocks;
+	}
+
+	public Vector3f getOrigin() {
+		return origin;
+	}
+	
+	/**
+     * Retrieves the block at the given local coordinates within the chunk.
+     * @param x Local X coordinate (0 to 31).
+     * @param y Local Y coordinate (depends on the height).
+     * @param z Local Z coordinate (0 to 31).
+     * @return The block at the specified local coordinates, or null if no block exists there.
+     */
+    public Block getBlockAt(int x, int y, int z) {
+        // Recorre la lista de bloques y busca el bloque en las coordenadas dadas.
+        for (Block block : blocks) {
+            if (block.getX() == x && block.getY() == y && block.getZ() == z) {
+                return block;
+            }
+        }
+        return null; // Devuelve null si no hay ningún bloque en esas coordenadas
+    }
+    
+    private static void generateChunkAtCameraPosition(Vector3f camPos, List<Vector3f> usedPos) {
+        int camChunkX = (int) camPos.x / 32; // Calcular la posición en el chunk en X
+        int camChunkZ = (int) camPos.z / 32; // Calcular la posición en el chunk en Z
+
+        // Calcular el centro del chunk
+        float chunkCenterX = (camChunkX * 32) + 16; // Centro del chunk en X
+        float chunkCenterZ = (camChunkZ * 32) + 16; // Centro del chunk en Z
+
+        // Verificar si la cámara está por encima de la altura del chunk
+        if (camPos.y < 0) { // Suponiendo que el nivel del terreno es 0
+            camPos.y = 1.0f; // Ajusta la cámara a una altura mínima
+        }
+
+        // Generar el chunk en la posición actual de la cámara
+        generateChunkAt(camChunkX, camChunkZ, usedPos);
+
+        // Comprobar si el chunk tiene bloques en la posición de la cámara
+        if (isChunkAtPosition(camChunkX, camChunkZ)) {
+            // Ajustar la posición de la cámara si está dentro de un bloque
+            Block blockBelow = getBlockAtPosition(camPos.x, camPos.y - 1, camPos.z);
+            if (blockBelow != null) {
+                camPos.y = blockBelow.getY() + 1; // Ajusta la cámara a estar encima del bloque
+            }
+        }
+
+        // Marcar el chunk como listo
+        isChunkAtCameraReady = true;
+    }
+    
+    private static boolean isChunkAtPosition(int chunkX, int chunkZ) {
+        // Itera sobre los chunks en la lista
+        for (ChunkMesh chunkMesh : MainGameLoop.chunks) {
+            if (chunkMesh != null) {
+                // Obtén el origen del chunk
+                Vector3f chunkOrigin = chunkMesh.chunck.getOrigin();
+                // Verifica si las coordenadas coinciden
+                if ((int)(chunkOrigin.x / 32) == chunkX && (int)(chunkOrigin.z / 32) == chunkZ) {
+                    return true; // El chunk existe
+                }
+            }
+        }
+        return false; // No se encontró el chunk
+    }
+
+
+    
+    private static Block getBlockAtPosition(float x, float y, float z) {
+        // Calcular las coordenadas del chunk en base a la posición del mundo
+        int chunkX = (int) (x / 32); // Suponiendo que cada chunk tiene un tamaño de 32x32
+        int chunkZ = (int) (z / 32);
+
+        // Obtener el chunk correspondiente usando las coordenadas calculadas
+        Chunk chunk = getChunkAt(chunkX, chunkZ);
+        if (chunk != null) {
+            // Calcular la posición local del bloque dentro del chunk
+            int localX = (int) (x % 32); // Posición local en X
+            int localY = (int) y;        // Altura, que es un valor entero
+            int localZ = (int) (z % 32); // Posición local en Z
+
+            // Devolver el bloque en la posición local
+            return chunk.getBlockAt(localX, localY, localZ); // Método que debes implementar en Chunk
+        }
+        return null; // Retorna null si no se encuentra el chunk
+    }
+    
+    public static Chunk getChunkAt(int chunkX, int chunkZ) {
+        // Iterate through the list of chunks
+        for (ChunkMesh chunkMesh : MainGameLoop.chunks) {
+            if (chunkMesh != null) {
+                Vector3f chunkOrigin = chunkMesh.chunck.getOrigin();
+                // Check if the chunk coordinates match the requested coordinates
+                if ((int)(chunkOrigin.x / 32) == chunkX && (int)(chunkOrigin.z / 32) == chunkZ) {
+                    return chunkMesh.chunck; // Return the matching chunk
+                }
+            }
+        }
+        return null; // Return null if no matching chunk is found
+    }
+
+
+    private static void generateChunkAt(int x, int z, List<Vector3f> usedPos) {
+        // Crear una lista de bloques para el chunk actual
+        List<Block> blocks = new ArrayList<Block>();
+        
+       
+        // Crear una cuadrícula de 32x32 bloques para el chunk
+        for (int i = 0; i < 32; i++) {
+            for (int j = 0; j < 32; j++) {
+                // Generar la altura usando Perlin noise o el generador que estés usando
+                blocks.add(new Block(i, (int) generator.generateHeight(i + (x * 32), j + (z * 32)), j, Block.GRASS));
+            }
+        }
+        
+        // Crear el chunk en la posición calculada
+        Chunk chunk = new Chunk(blocks, new Vector3f(x * 32, 0, z * 32));
+        // Crear el mesh del chunk a partir de los bloques
+        ChunkMesh mesh = new ChunkMesh(chunk);
+        
+        // Añadir el chunk generado a la lista de chunks
+        MainGameLoop.chunks.add(mesh);
+        
+        // Marcar la posición como usada para evitar generar dos veces el mismo chunk
+        usedPos.add(new Vector3f(x * 32, 0, z * 32));
+    }
+}

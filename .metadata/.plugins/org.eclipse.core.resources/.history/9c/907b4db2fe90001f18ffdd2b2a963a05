@@ -1,0 +1,234 @@
+package fisics;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.lwjgl.util.vector.Vector3f;
+import entities.Camera;
+import juancraft.MainGameLoop;
+import cube.Block;
+import chunks.Chunk;
+import chunks.ChunkMesh;
+
+public class CollisionHandler {
+
+    // Constants for player dimensions and collision margin
+    private static final float PLAYER_HEIGHT = 2.0f; // The height of the player/camera
+    private static final float PLAYER_WIDTH = 0.8f;  // The width of the player/camera
+    @SuppressWarnings("unused")
+	private static final float COLLISION_MARGIN = 0.1f; // A small margin for collision detection accuracy
+
+    /**
+     * Checks if the camera (player) is colliding with any blocks in the nearby chunks.
+     * 
+     * @param camera The Camera object representing the player's position and state.
+     * @param chunks The list of ChunkMesh objects representing the surrounding chunks.
+     * @return true if there is a collision, false otherwise.
+     */
+    public static boolean checkCollision(Camera camera, List<ChunkMesh> chunks) {
+        // Get the camera's current position
+        Vector3f position = camera.getPosition();
+        
+        // Determine the chunk coordinates the player is in
+        int chunkX = (int) Math.floor(position.x / 32);
+        int chunkZ = (int) Math.floor(position.z / 32);
+        
+        // Create a thread-safe copy of the chunk list for iteration
+        List<ChunkMesh> chunksCopy;
+        synchronized(chunks) {
+            chunksCopy = new ArrayList<>(chunks);
+        }
+        
+        // Only check for collisions with nearby chunks (within 1 chunk distance)
+        for (ChunkMesh chunkMesh : chunksCopy) {
+            if (chunkMesh == null || chunkMesh.chunck == null) continue;
+            
+            Chunk chunk = chunkMesh.chunck;
+            Vector3f chunkOrigin = chunk.getOrigin();
+            
+            // Only check chunks that are adjacent to the current chunk (within 1 chunk radius)
+            if (Math.abs(chunkOrigin.x / 32 - chunkX) <= 1 && Math.abs(chunkOrigin.z / 32 - chunkZ) <= 1) {
+                // Check for collisions within this chunk
+                if (checkChunkCollision(position, chunk)) {
+                    return true; // A collision was detected
+                }
+            }
+        }
+        return false; // No collision was detected
+    }
+
+    /**
+     * Checks for a collision between the player and the blocks in the given chunk.
+     * 
+     * @param position The player's current position.
+     * @param chunk The chunk to check for collisions.
+     * @return true if there is a collision with any block, false otherwise.
+     */
+    private static boolean checkChunkCollision(Vector3f position, Chunk chunk) {
+        if (chunk == null || chunk.getBlocks() == null) return false;
+        
+        List<Block> blocks = chunk.getBlocks();
+        Vector3f chunkOrigin = chunk.getOrigin();
+        
+        // Iterate through the blocks in the chunk and check for nearby blocks
+        for (Block block : blocks) {
+            if (block != null) {
+                // Calculate the absolute position of the block in the world
+                float blockX = chunkOrigin.x + block.getX();
+                float blockY = block.getY();
+                float blockZ = chunkOrigin.z + block.getZ();
+                
+                // Check if the player is within a reasonable distance from the block
+                if (Math.abs(position.x - blockX) < 1 &&  // Reduce the horizontal check distance
+                    Math.abs(position.y - blockY) < 2 && // Check vertical distance to be below the block
+                    Math.abs(position.z - blockZ) < 1) { // Reduce the horizontal check distance
+                    
+                    // Check for a collision using a bounding box
+                    if (position.x + PLAYER_WIDTH / 2 > blockX - 0.5f && 
+                        position.x - PLAYER_WIDTH / 2 < blockX + 0.5f &&
+                        position.y < blockY + 1.0f && 
+                        position.y + PLAYER_HEIGHT > blockY &&
+                        position.z + PLAYER_WIDTH / 2 > blockZ - 0.5f && 
+                        position.z - PLAYER_WIDTH / 2 < blockZ + 0.5f) {
+                        return true; // Collision detected
+                    }
+                }
+            }
+        }
+        return false; // No collision detected
+    }
+
+
+    /**
+     * Handles collision resolution by resetting the camera's position to avoid overlapping with blocks.
+     * 
+     * @param camera The Camera object representing the player.
+     * @param oldPosition The camera's previous position (before movement).
+     * @param chunks The list of nearby ChunkMesh objects.
+     */
+    public static void handleCollision(Camera camera, Vector3f oldPosition, List<ChunkMesh> chunks) {
+        // Get the camera's current position
+        Vector3f currentPos = camera.getPosition();
+        Vector3f newPosition = new Vector3f(currentPos);
+        
+        // Flags to mark if a collision occurred on any axis
+        boolean collisionX = false, collisionY = false, collisionZ = false;
+        
+        // Test movement in the X axis
+        newPosition.x = currentPos.x;
+        camera.setPosition(newPosition); // Temporarily update the camera's position
+        if (checkCollision(camera, chunks)) {
+            collisionX = true; // Collision detected on the X axis
+        } else {
+            oldPosition.x = currentPos.x; // Allow movement on the X axis
+        }
+        
+        // Test movement in the Y axis
+        newPosition.y = currentPos.y;
+        camera.setPosition(newPosition);
+        if (checkCollision(camera, chunks)) {
+            collisionY = true; // Collision detected on the Y axis
+        } else {
+            oldPosition.y = currentPos.y; // Allow movement on the Y axis
+        }
+        
+        // Test movement in the Z axis
+        newPosition.z = currentPos.z;
+        camera.setPosition(newPosition);
+        if (checkCollision(camera, chunks)) {
+            collisionZ = true; // Collision detected on the Z axis
+        } else {
+            oldPosition.z = currentPos.z; // Allow movement on the Z axis
+        }
+
+        // Resolve collisions by resetting the camera's position on the axes where collisions occurred
+        if (collisionX) {
+            currentPos.x = oldPosition.x; // Block movement on the X axis
+        }
+        if (collisionY) {
+            currentPos.y = oldPosition.y; // Block movement on the Y axis
+        }
+        if (collisionZ) {
+            currentPos.z = oldPosition.z; // Block movement on the Z axis
+        }
+
+        // Set the camera's position to the final resolved position
+        camera.setPosition(currentPos);
+    }
+    
+    public static boolean isBlockInFrontOrSides(Camera camera, List<ChunkMesh> chunks) {
+        Vector3f camPosition = camera.getPosition();
+        // Define the bounds for detecting blocks in front and sides
+        float detectionDistance = 1.0f; // Distance to check for blocks
+
+        // Check directly in front
+        if (isBlockAtPosition(camPosition.x, camPosition.y, camPosition.z - detectionDistance, chunks)) {
+            return true; // Block in front
+        }
+        // Check to the left
+        if (isBlockAtPosition(camPosition.x - detectionDistance, camPosition.y, camPosition.z, chunks)) {
+            return true; // Block to the left
+        }
+        // Check to the right
+        if (isBlockAtPosition(camPosition.x + detectionDistance, camPosition.y, camPosition.z, chunks)) {
+            return true; // Block to the right
+        }
+
+        return false; // No blocks detected
+    }
+
+    private static boolean isBlockAtPosition(float x, float y, float z, List<ChunkMesh> chunks) {
+        int chunkX = (int) (x / 32);
+        int chunkZ = (int) (z / 32);
+        
+        // Search the chunk where the block is supposed to be
+        for (ChunkMesh chunkMesh : chunks) {
+            Vector3f chunkOrigin = chunkMesh.chunck.getOrigin();
+            if (chunkOrigin.x / 32 == chunkX && chunkOrigin.z / 32 == chunkZ) {
+                int blockX = (int) (x - chunkOrigin.x);
+                int blockZ = (int) (z - chunkOrigin.z);
+                Block block = chunkMesh.chunck.getBlockAt(blockX, (int) y, blockZ);
+                return block != null; // Returns true if there's a block
+            }
+        }
+        return false; // No block found at that position
+    }
+    
+    /**
+     * Checks if there is solid ground (a block) directly below the camera's current position.
+     *
+     * @param camera The camera whose position will be checked for ground below.
+     * @return true if there is a block below the camera, false otherwise.
+     */
+    public static boolean isGroundBelowCamera(Camera camera) {
+        // Get the current position of the camera in the world.
+        Vector3f camPosition = camera.getPosition();
+        
+        // Calculate the chunk coordinates based on the camera's position.
+        int camChunkX = (int) camPosition.x / 32; // Determine the chunk's X coordinate.
+        int camChunkZ = (int) camPosition.z / 32; // Determine the chunk's Z coordinate.
+
+        // Search for the chunk in which the camera is located.
+        for (ChunkMesh chunkMesh : MainGameLoop.chunks) {
+            // Get the origin of the current chunk.
+            Vector3f chunkOrigin = chunkMesh.chunck.getOrigin();
+            
+            // Check if the chunk coordinates match the camera's chunk coordinates.
+            if (chunkOrigin.x / 32 == camChunkX && chunkOrigin.z / 32 == camChunkZ) {
+                // Calculate the local block coordinates within the chunk.
+                int blockX = (int) (camPosition.x - chunkOrigin.x); // Local X position of the block.
+                int blockZ = (int) (camPosition.z - chunkOrigin.z); // Local Z position of the block.
+
+                // Retrieve the block directly below the camera's current position.
+                Block blockBelow = chunkMesh.chunck.getBlockAt(blockX, (int)camPosition.y - 1, blockZ);
+                
+                // Return true if a block exists below the camera; otherwise, return false.
+                return blockBelow != null;  // Returns true if there is a block.
+            }
+        }
+        
+        // If no matching chunk is found, return false (no ground below).
+        return false;
+    }
+
+
+}

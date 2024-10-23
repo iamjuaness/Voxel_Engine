@@ -1,0 +1,198 @@
+package entities;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.util.vector.Vector3f;
+
+import chunks.ChunkMesh;
+import cube.Block;
+import fisics.CollisionHandler;
+import juancraft.MainGameLoop;
+
+/**
+ * The Camera class represents a camera in a 3D space, allowing for movement and rotation based on user input.
+ * It uses keyboard input for forward and backward movement and mouse input for rotation.
+ */
+public class Camera {
+	
+    // Variables relacionadas con la física y el vuelo
+    private float velocityY = 0;       // Velocidad vertical
+    private boolean isFlying = false;  // Si la cámara está en modo de vuelo
+    private boolean onGround = true;   // Si la cámara está en el suelo
+    private boolean doubleJumpAvailable = true; // Si el doble salto está disponible
+
+    private final float gravity = -0.01f;     // Fuerza de gravedad
+    private final float jumpStrength = 0.05f; // Fuerza del salto
+
+    // The position of the camera in 3D space.
+    private Vector3f position;
+    
+    // Rotation angles for the camera around the X, Y, and Z axes.
+    private float rotX, rotY, rotZ;
+    
+    // Speed at which the camera moves.
+    private float speed = 0.5f;
+    
+    // Speed at which the camera rotates.
+    private float turnSpeed = 0.1f;
+    
+    private long lastSpacePressTime = 0;
+
+    /**
+     * Constructor to create a Camera instance.
+     * 
+     * @param position The initial position of the camera in 3D space.
+     * @param rotX The initial rotation angle around the X axis.
+     * @param rotY The initial rotation angle around the Y axis.
+     * @param rotZ The initial rotation angle around the Z axis (not used in this implementation).
+     */
+    public Camera(Vector3f position, float rotX, float rotY, float rotZ) {
+        this.position = position;
+        this.rotX = rotX;
+        this.rotY = rotY;
+        this.rotZ = rotZ;
+    }
+    
+    // Método para aplicar gravedad
+    public void applyGravity() {
+        if (!onGround) {
+            velocityY += gravity; // Aplicar aceleración de la gravedad
+            position.y += velocityY; // Actualizar la posición Y según la velocidad
+        }
+    }
+
+    /**
+     * Updates the camera's position and rotation based on user input.
+     * The W and S keys (or UP and DOWN arrows) move the camera forward and backward.
+     * The A and D keys move the camera left and right.
+     * The SPACE key moves the camera upward.
+     * The LEFT SHIFT key moves the camera downward.
+     * The mouse movement updates the camera's rotation.
+     */
+    public void move() {
+        // Save old position
+        Vector3f oldPosition = new Vector3f(position);
+
+        // Variables to control movement direction
+        float moveAt = 0;
+        float strafeAt = 0;
+
+        // Detect if SPACE is pressed for jumping or flying
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            if (onGround) {
+                velocityY = jumpStrength; // Normal jump when on the ground
+                onGround = false;          // Now we are in the air
+            } else if (doubleJumpAvailable) {
+                velocityY = jumpStrength;  // Double jump if available
+                doubleJumpAvailable = false; // Disable double jump
+            }
+        }
+
+        if (!onGround) {
+            velocityY += gravity; // Apply gravity only if not on the ground
+        } else {
+            velocityY = 0; // Reset vertical velocity when on the ground
+        }
+
+        // Movement detection (forward/backward and left/right)
+        if (Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+            moveAt = -speed; // Move forward
+        } else if (Keyboard.isKeyDown(Keyboard.KEY_S) || Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+            moveAt = speed; // Move backward
+        }
+        
+        if (Keyboard.isKeyDown(Keyboard.KEY_A) || Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+            strafeAt = -speed; // Move left
+        } else if (Keyboard.isKeyDown(Keyboard.KEY_D) || Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+            strafeAt = speed; // Move right
+        }
+
+        // Update rotation based on mouse movement
+        rotX += -Mouse.getDY() * turnSpeed;
+        rotY += Mouse.getDX() * turnSpeed;
+
+        // Calculate movement based on rotation
+        float dx = (float) -(moveAt * Math.sin(Math.toRadians(rotY))) + (float) (strafeAt * Math.cos(Math.toRadians(rotY)));
+        float dz = (float) (moveAt * Math.cos(Math.toRadians(rotY))) + (float) (strafeAt * Math.sin(Math.toRadians(rotY)));
+
+        // Update camera position
+        position.x += dx;
+        position.y += velocityY; // Apply vertical velocity (gravity or jump)
+        position.z += dz;
+
+        // Check for collisions with blocks
+        boolean collided = CollisionHandler.checkCollision(this, MainGameLoop.chunks);
+
+        if (collided) {
+            // The camera collides with a block
+            if (velocityY < 0) {
+                // Adjust the position to land on the block
+                position.y = (float) Math.ceil(position.y); // Set camera to the top of the block
+                onGround = true; // Camera is now on the ground
+                doubleJumpAvailable = true; // Restore double jump ability
+                velocityY = 0; // Stop vertical movement
+            }
+        } else {
+            // If not on the ground, check for other conditions
+            onGround = false; // Camera is not touching the ground
+        }
+
+        // Handle collision response
+        CollisionHandler.handleCollision(this, oldPosition, MainGameLoop.chunks);
+    }
+
+
+
+    /**
+     * Gets the current position of the camera.
+     * 
+     * @return The position of the camera as a Vector3f.
+     */
+    public Vector3f getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector3f position) {
+		this.position = position;
+	}
+
+	/**
+     * Gets the current rotation around the X axis.
+     * 
+     * @return The rotation angle around the X axis.
+     */
+    public float getRotX() {
+        return rotX;
+    }
+
+    /**
+     * Gets the current rotation around the Y axis.
+     * 
+     * @return The rotation angle around the Y axis.
+     */
+    public float getRotY() {
+        return rotY;
+    }
+
+    /**
+     * Gets the current rotation around the Z axis.
+     * 
+     * @return The rotation angle around the Z axis (not used in this implementation).
+     */
+    public float getRotZ() {
+        return rotZ;
+    }
+
+    /**
+     * Gets a direction vector indicating where the camera is looking.
+     * 
+     * @return A Vector3f representing the forward direction the camera is facing.
+     */
+    public Vector3f getDirection() {
+        float dirX = (float) -(Math.sin(Math.toRadians(rotY)));
+        float dirY = (float) -(Math.sin(Math.toRadians(rotX)));
+        float dirZ = (float) -(Math.cos(Math.toRadians(rotY)));
+        return new Vector3f(dirX, dirY, dirZ);
+    }
+   
+}

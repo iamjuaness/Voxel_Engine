@@ -1,0 +1,224 @@
+package entities;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.util.vector.Vector3f;
+
+import chunks.ChunkMesh;
+import cube.Block;
+import fisics.CollisionHandler;
+import juancraft.MainGameLoop;
+
+/**
+ * The Camera class represents a camera in a 3D space, allowing for movement and rotation based on user input.
+ * It uses keyboard input for forward and backward movement and mouse input for rotation.
+ */
+public class Camera {
+	
+    // Variables relacionadas con la física y el vuelo
+    private float velocityY = 0;       // Velocidad vertical
+    private boolean isFlying = false;  // Si la cámara está en modo de vuelo
+    private boolean onGround = true;   // Si la cámara está en el suelo
+    private boolean doubleJumpAvailable = true; // Si el doble salto está disponible
+
+    private final float gravity = -0.1f;     // Fuerza de gravedad
+    private final float jumpStrength = 1.5f; // Fuerza del salto
+
+    // The position of the camera in 3D space.
+    private Vector3f position;
+    
+    // Rotation angles for the camera around the X, Y, and Z axes.
+    private float rotX, rotY, rotZ;
+    
+    // Speed at which the camera moves.
+    private float speed = 1f;
+    
+    // Speed at which the camera rotates.
+    private float turnSpeed = 0.1f;
+    
+    private long lastSpacePressTime = 0;
+
+    /**
+     * Constructor to create a Camera instance.
+     * 
+     * @param position The initial position of the camera in 3D space.
+     * @param rotX The initial rotation angle around the X axis.
+     * @param rotY The initial rotation angle around the Y axis.
+     * @param rotZ The initial rotation angle around the Z axis (not used in this implementation).
+     */
+    public Camera(Vector3f position, float rotX, float rotY, float rotZ) {
+        this.position = position;
+        this.rotX = rotX;
+        this.rotY = rotY;
+        this.rotZ = rotZ;
+    }
+    
+    // Método para aplicar gravedad
+    public void applyGravity() {
+        if (!onGrounded) {
+            velocityY += gravity; // Aplicar aceleración de la gravedad
+            position.y += velocityY; // Actualizar la posición Y según la velocidad
+        }
+    }
+
+    /**
+     * Updates the camera's position and rotation based on user input.
+     * The W and S keys (or UP and DOWN arrows) move the camera forward and backward.
+     * The A and D keys move the camera left and right.
+     * The SPACE key moves the camera upward.
+     * The LEFT SHIFT key moves the camera downward.
+     * The mouse movement updates the camera's rotation.
+     */
+    public void move() {
+    	// Save old position
+    	Vector3f oldPosition = new Vector3f(position);
+    	
+        // Variables to control movement direction
+        float moveAt = 0;
+        float strafeAt = 0;
+
+     // Si no estamos volando, aplicar gravedad y verificar salto
+        if (!isFlying) {
+            velocityY += gravity; // Aplicar la gravedad a la velocidad vertical
+            if (onGround) {
+                velocityY = 0; // Si estamos en el suelo, la velocidad vertical es 0
+            }
+        }
+
+        // Detectar si se presiona la barra espaciadora para saltar o volar
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            if (onGround) {
+                velocityY = jumpStrength; // Salto normal cuando estamos en el suelo
+                onGround = false;         // Ahora estamos en el aire
+            } else if (doubleJumpAvailable) {
+                velocityY = jumpStrength; // Hacer doble salto si está disponible
+                doubleJumpAvailable = false; // Desactivar el doble salto
+            }
+        }
+
+        // Si la tecla de vuelo se presiona dos veces (barra espaciadora), activar el vuelo
+        if (isFlying) {
+            velocityY = 0; // Desactivar la gravedad en modo vuelo
+        }
+
+        // Detectar movimiento hacia adelante/atrás
+        if (Keyboard.isKeyDown(Keyboard.KEY_W) || Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+            moveAt = -speed; // Adelante
+        } else if (Keyboard.isKeyDown(Keyboard.KEY_S) || Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+            moveAt = speed; // Atrás
+        }
+
+        // Detectar movimiento hacia la izquierda/derecha
+        if (Keyboard.isKeyDown(Keyboard.KEY_A) || Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+            strafeAt = -speed; // Izquierda
+        } else if (Keyboard.isKeyDown(Keyboard.KEY_D) || Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+            strafeAt = speed; // Derecha
+        }
+        
+        // Detección de doble espacio
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastSpacePressTime < 300) { // Si se presiona dos veces en 300 ms
+                isFlying = !isFlying; // Alternar entre volar y no volar
+                doubleJumpAvailable = false; // Desactivar el doble salto cuando volamos
+            }
+            lastSpacePressTime = currentTime; // Actualizar el tiempo de la última presionada
+        }
+
+        // Actualizar la rotación basada en el movimiento del ratón
+        rotX += -Mouse.getDY() * turnSpeed;
+        rotY += Mouse.getDX() * turnSpeed;
+
+        // Calcular el movimiento basado en la rotación
+        float dx = (float) -(moveAt * Math.sin(Math.toRadians(rotY))) + (float) (strafeAt * Math.cos(Math.toRadians(rotY)));
+        float dz = (float) (moveAt * Math.cos(Math.toRadians(rotY))) + (float) (strafeAt * Math.sin(Math.toRadians(rotY)));
+
+        // Aplicar el movimiento a la posición de la cámara
+        position.x += dx;
+        position.y += velocityY; // Aplicar la velocidad vertical (gravedad o salto)
+        position.z += dz;
+
+        // Verificar si la cámara está tocando el suelo después del movimiento
+        if (CollisionHandler.checkCollision(this, MainGameLoop.chunks)) {
+            onGround = true; // La cámara está en el suelo
+            doubleJumpAvailable = true; // Restaurar la capacidad de doble salto
+        } else {
+            onGround = false; // La cámara está en el aire
+        }
+
+        // Manejo de colisiones
+        CollisionHandler.handleCollision(this, oldPosition, MainGameLoop.chunks);
+    }
+
+
+    /**
+     * Gets the current position of the camera.
+     * 
+     * @return The position of the camera as a Vector3f.
+     */
+    public Vector3f getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector3f position) {
+		this.position = position;
+	}
+
+	/**
+     * Gets the current rotation around the X axis.
+     * 
+     * @return The rotation angle around the X axis.
+     */
+    public float getRotX() {
+        return rotX;
+    }
+
+    /**
+     * Gets the current rotation around the Y axis.
+     * 
+     * @return The rotation angle around the Y axis.
+     */
+    public float getRotY() {
+        return rotY;
+    }
+
+    /**
+     * Gets the current rotation around the Z axis.
+     * 
+     * @return The rotation angle around the Z axis (not used in this implementation).
+     */
+    public float getRotZ() {
+        return rotZ;
+    }
+
+    /**
+     * Gets a direction vector indicating where the camera is looking.
+     * 
+     * @return A Vector3f representing the forward direction the camera is facing.
+     */
+    public Vector3f getDirection() {
+        float dirX = (float) -(Math.sin(Math.toRadians(rotY)));
+        float dirY = (float) -(Math.sin(Math.toRadians(rotX)));
+        float dirZ = (float) -(Math.cos(Math.toRadians(rotY)));
+        return new Vector3f(dirX, dirY, dirZ);
+    }
+    
+    public static boolean isGroundBelowCamera(Camera camera) {
+        Vector3f camPosition = camera.getPosition();
+        int camChunkX = (int) camPosition.x / 32;
+        int camChunkZ = (int) camPosition.z / 32;
+
+        // Buscar el chunk en el que está la cámara
+        for (ChunkMesh chunkMesh : MainGameLoop.chunks) {
+            Vector3f chunkOrigin = chunkMesh.chunck.getOrigin();
+            if (chunkOrigin.x / 32 == camChunkX && chunkOrigin.z / 32 == camChunkZ) {
+                // Verificar si hay un bloque debajo de la cámara
+                int blockX = (int) (camPosition.x - chunkOrigin.x);
+                int blockZ = (int) (camPosition.z - chunkOrigin.z);
+                Block blockBelow = chunkMesh.chunck.getBlockAt(blockX, (int)camPosition.y - 1, blockZ);
+                return blockBelow != null;  // Devuelve true si hay un bloque
+            }
+        }
+        return false;
+    }
+}
