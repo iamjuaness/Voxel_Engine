@@ -10,6 +10,14 @@
 
 JuanCraft is a 3D game built using the Lightweight Java Game Library (LWJGL). The project demonstrates the use of OpenGL for rendering graphics and provides a basic structure for developing a game.
 
+<h2>World view with procedural generation and Perlin Noise</h2>
+
+<div style="display: flex; justify-content: center;">
+  <img src="https://github.com/user-attachments/assets/58f5d509-bedb-42e5-abd2-4bf194b30ade" width="300" style="margin-right: 40px;"/>
+  <img src="https://github.com/user-attachments/assets/fac328af-69cf-450c-a63a-748d61c86035" width="300" style="margin-right: 40px;"/>
+ <img src="https://github.com/user-attachments/assets/7058a0e0-0374-464e-8780-a68276fb0a73" width="300"/>
+</div>
+
 ## Table of Contents
 - [Features](#features)
 - [Technologies Used](#technologies-used)
