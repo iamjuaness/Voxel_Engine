@@ -113,6 +113,9 @@ To run this project, you need:
       - Once the game starts, use the following controls:
         - Press 'E' to toggle mouse capturing.
         - Press 'ESCAPE' to exit the game.
+        - Press 'W, A, S, D' to move the character around the world.
+        - Press 'SPACE' to jump.
+        - Move the mouse to rotate the view.
        
 
 ### 📄 Summary of the Steps:
